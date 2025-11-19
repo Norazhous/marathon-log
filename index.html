@@ -1,190 +1,271 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>马拉松训练日记</title>
+    <title>马拉松训练日记 V2.2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body {
-            background-color: #f3f4f6;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        }
-
-        .card {
-            transition: all 0.2s;
-        }
-
-        .card:active {
-            transform: scale(0.98);
-        }
+        body { background-color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+        .card { transition: all 0.2s; }
+        .card:active { transform: scale(0.98); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
+<body class="pb-24">
 
-<body class="pb-20">
-
-    <div class="bg-blue-600 text-white p-4 sticky top-0 z-10 shadow-md">
-        <h1 class="text-xl font-bold">🏃‍♂️ 26周马拉松挑战</h1>
-        <p class="text-sm opacity-80">第一周：建立基础 & 修复膝盖</p>
+    <div class="bg-blue-700 text-white p-4 sticky top-0 z-20 shadow-md">
+        <div class="flex justify-between items-center mb-3">
+            <h1 class="text-lg font-bold">🏃‍♂️ 26周挑战</h1>
+            <div class="flex space-x-2">
+                <button onclick="generateReport()" class="bg-green-500 text-xs px-3 py-1.5 rounded shadow hover:bg-green-600 font-medium">
+                    📋 复制
+                </button>
+                <button onclick="backupToEmail()" class="bg-gray-100 text-blue-700 text-xs px-3 py-1.5 rounded shadow hover:bg-white font-bold flex items-center">
+                    📩 邮件备份
+                </button>
+            </div>
+        </div>
+        
+        <select id="week-selector" onchange="changeWeek()" class="w-full p-2 text-black rounded-lg outline-none font-bold shadow-inner bg-blue-50">
+            <option value="1">第1周：基础与修复 (11/20-11/26)</option>
+            <option value="2">第2周：保持连贯性 (11/27-12/03)</option>
+            <option value="3">第3周：专注姿势 (12/04-12/10)</option>
+            <option value="4">第4周：减量休息 (12/11-12/17)</option>
+        </select>
     </div>
 
-    <div class="p-4">
-        <div class="bg-white rounded-xl p-4 shadow-sm flex justify-between items-center">
-            <div>
-                <p class="text-gray-500 text-xs">本周完成度</p>
-                <p class="text-2xl font-bold text-blue-600" id="progress-text">0/7</p>
-            </div>
-            <button onclick="generateReport()"
-                class="bg-green-500 hover:bg-green-600 text-white text-sm px-4 py-2 rounded-lg font-medium shadow">
-                📋 复制汇报给AI
-            </button>
+    <div class="px-4 pt-4">
+        <div class="flex justify-between text-xs text-gray-500 mb-1">
+            <span>本周进度</span>
+            <span id="progress-text">0/7</span>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-2.5">
+            <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
         </div>
     </div>
 
-    <div id="schedule-list" class="px-4 space-y-3">
-    </div>
+    <div id="schedule-list" class="p-4 space-y-3">
+        </div>
 
-    <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-end justify-center z-50">
-        <div class="bg-white w-full rounded-t-2xl p-6 animate-slide-up h-3/4 overflow-y-auto">
+    <div id="modal" class="fixed inset-0 bg-black bg-opacity-60 hidden flex items-end justify-center z-50 backdrop-blur-sm">
+        <div class="bg-white w-full rounded-t-2xl p-6 h-3/4 overflow-y-auto animate-slide-up">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold" id="modal-title">编辑记录</h2>
-                <button onclick="closeModal()" class="text-gray-500 text-2xl">&times;</button>
+                <h2 class="text-xl font-bold text-blue-800" id="modal-title">编辑记录</h2>
+                <button onclick="closeModal()" class="text-gray-400 text-2xl">&times;</button>
             </div>
-
+            
             <div class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">实际完成距离/时间</label>
-                    <input type="text" id="input-result"
-                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                        placeholder="例：5公里，35分钟">
+                    <label class="block text-sm font-bold text-gray-700 mb-1">✅ 实际完成情况</label>
+                    <input type="text" id="input-result" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" placeholder="例如：5.2公里，用时36分">
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">身体感受 (膝盖/髂胫束)</label>
-                    <textarea id="input-feeling" rows="4"
-                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                        placeholder="例：跑到3公里左膝有点紧，痛感 2/10..."></textarea>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">🦵 身体感受 (重点记录膝盖)</label>
+                    <textarea id="input-feeling" rows="3" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" placeholder="膝盖有无疼痛？哪儿紧？"></textarea>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">打分 (0-10, 10为剧痛)</label>
-                    <input type="number" id="input-pain" class="w-full p-3 border border-gray-300 rounded-lg"
-                        placeholder="0">
+                    <label class="block text-sm font-bold text-gray-700 mb-1">📉 痛感打分 (0无痛 - 10剧痛)</label>
+                    <div class="flex space-x-2 overflow-x-auto py-2 no-scrollbar">
+                        <script>
+                            for(let i=0; i<=10; i++) {
+                                document.write(`<div onclick="selectPain(${i})" id="pain-btn-${i}" class="pain-btn flex-shrink-0 w-10 h-10 rounded-full border flex items-center justify-center cursor-pointer font-bold ${i>=3 ? 'border-red-200 text-red-600' : 'border-green-200 text-green-600'}">${i}</div>`);
+                            }
+                        </script>
+                    </div>
+                    <input type="hidden" id="input-pain">
                 </div>
 
-                <button onclick="saveData()"
-                    class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold text-lg shadow-lg mt-4">保存记录</button>
+                <button onclick="saveData()" class="w-full bg-blue-600 active:bg-blue-700 text-white py-3 rounded-xl font-bold text-lg shadow-lg mt-4">保存打卡</button>
             </div>
         </div>
     </div>
 
     <script>
-
-        const defaultPlan = [
-            { date: "11/20 (周四)", task: "轻松跑 5公里", focus: "轻松说话，落地轻盈", result: "", feeling: "", pain: "", done: false },
-            { date: "11/21 (周五)", task: "休息 & 滚轴放松", focus: "大腿前侧/臀部", result: "", feeling: "", pain: "", done: false },
-            { date: "11/22 (周六)", task: "长距离跑 8公里", focus: "跑4分走1分，痛即停", result: "", feeling: "", pain: "", done: false },
-            { date: "11/23 (周日)", task: "快走 45分钟", focus: "摆臂快走，禁止跑步", result: "", feeling: "", pain: "", done: false },
-            { date: "11/24 (周一)", task: "休息", focus: "彻底放松", result: "", feeling: "", pain: "", done: false },
-            { date: "11/25 (周二)", task: "轻松跑 5公里", focus: "核心收紧，姿势挺拔", result: "", feeling: "", pain: "", done: false },
-            { date: "11/26 (周三)", task: "力量训练", focus: "蚌式/臀桥/侧抬腿", result: "", feeling: "", pain: "", done: false },
+        // ================= 数据定义区域 (前4周) =================
+        const masterPlan = [
+            // 第1周
+            { week: 1, date: "11/20 (周四)", task: "轻松跑 5公里", focus: "轻松说话，落地轻盈" },
+            { week: 1, date: "11/21 (周五)", task: "休息 & 滚轴放松", focus: "大腿前侧/臀部" },
+            { week: 1, date: "11/22 (周六)", task: "长距离跑 8公里", focus: "跑4分走1分，痛即停" },
+            { week: 1, date: "11/23 (周日)", task: "快走 45分钟", focus: "摆臂快走，替代交叉训练" },
+            { week: 1, date: "11/24 (周一)", task: "休息", focus: "彻底放松" },
+            { week: 1, date: "11/25 (周二)", task: "轻松跑 5公里", focus: "核心收紧，姿势挺拔" },
+            { week: 1, date: "11/26 (周三)", task: "力量训练", focus: "蚌式/臀桥/侧抬腿" },
+            // 第2周
+            { week: 2, date: "11/27 (周四)", task: "轻松跑 6公里", focus: "维持心率平稳" },
+            { week: 2, date: "11/28 (周五)", task: "休息", focus: "泡沫轴放松" },
+            { week: 2, date: "11/29 (周六)", task: "长距离跑 9公里", focus: "跑4走1，注意膝盖" },
+            { week: 2, date: "11/30 (周日)", task: "快走 45分钟", focus: "有氧基础" },
+            { week: 2, date: "12/01 (周一)", task: "休息", focus: "恢复" },
+            { week: 2, date: "12/02 (周二)", task: "轻松跑 5公里", focus: "步频练习" },
+            { week: 2, date: "12/03 (周三)", task: "力量训练", focus: "增加一组(4组)" },
+            // 第3周
+            { week: 3, date: "12/04 (周四)", task: "轻松跑 6公里", focus: "呼吸节奏" },
+            { week: 3, date: "12/05 (周五)", task: "休息", focus: "拉伸屈髋肌" },
+            { week: 3, date: "12/06 (周六)", task: "长距离跑 10公里", focus: "跑4走1，突破双位数" },
+            { week: 3, date: "12/07 (周日)", task: "快走 50分钟", focus: "耐力" },
+            { week: 3, date: "12/08 (周一)", task: "休息", focus: "恢复" },
+            { week: 3, date: "12/09 (周二)", task: "轻松跑 6公里", focus: "放松肩膀" },
+            { week: 3, date: "12/10 (周三)", task: "力量训练", focus: "核心+臀部" },
+            // 第4周
+            { week: 4, date: "12/11 (周四)", task: "轻松跑 5公里", focus: "非常轻松" },
+            { week: 4, date: "12/12 (周五)", task: "休息", focus: "多睡觉" },
+            { week: 4, date: "12/13 (周六)", task: "长距离跑 8公里", focus: "减量恢复" },
+            { week: 4, date: "12/14 (周日)", task: "快走 30分钟", focus: "轻松活动" },
+            { week: 4, date: "12/15 (周一)", task: "休息", focus: "恢复" },
+            { week: 4, date: "12/16 (周二)", task: "轻松跑 4公里", focus: "享受跑步" },
+            { week: 4, date: "12/17 (周三)", task: "力量训练", focus: "减少组数" },
         ];
 
-        let plan = JSON.parse(localStorage.getItem('marathonPlan')) || defaultPlan;
+        let userPlan = [];
+        let currentWeek = 1;
         let currentIndex = null;
 
-        // 渲染列表
+        function init() {
+            const storedData = JSON.parse(localStorage.getItem('marathonPlan_v2')) || [];
+            
+            userPlan = masterPlan.map((item, index) => {
+                const saved = storedData[index];
+                return {
+                    ...item,
+                    result: saved ? saved.result : "",
+                    feeling: saved ? saved.feeling : "",
+                    pain: saved ? saved.pain : "",
+                    done: saved ? saved.done : false
+                };
+            });
+            render();
+        }
+
+        function changeWeek() {
+            currentWeek = parseInt(document.getElementById('week-selector').value);
+            render();
+        }
+
         function render() {
             const list = document.getElementById('schedule-list');
             list.innerHTML = '';
-            let doneCount = 0;
+            const weekTasks = userPlan.filter(item => item.week === currentWeek);
+            const doneCount = weekTasks.filter(t => t.done).length;
+            
+            document.getElementById('progress-text').innerText = `${doneCount}/${weekTasks.length}`;
+            document.getElementById('progress-bar').style.width = `${(doneCount/weekTasks.length)*100}%`;
 
-            plan.forEach((item, index) => {
-                if (item.done) doneCount++;
-                const statusColor = item.done ? 'border-green-500 bg-green-50' : 'border-white bg-white';
+            weekTasks.forEach((item) => {
+                const realIndex = userPlan.indexOf(item);
+                const statusClass = item.done ? 'bg-green-50 border-green-500 border-l-4' : 'bg-white border-l-4 border-blue-200';
                 const icon = item.done ? '✅' : '⭕️';
+                const painBadge = item.pain ? `<span class="ml-2 text-xs px-2 py-0.5 rounded ${item.pain > 2 ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}">痛感:${item.pain}</span>` : '';
 
                 const html = `
-                    <div onclick="openModal(${index})" class="card cursor-pointer rounded-xl p-4 border-l-4 shadow-sm flex justify-between items-start ${statusColor}">
+                    <div onclick="openModal(${realIndex})" class="card cursor-pointer rounded-xl p-4 shadow-sm flex justify-between items-start mb-3 ${statusClass}">
                         <div class="flex-1">
-                            <div class="flex justify-between mb-1">
-                                <span class="font-bold text-gray-800">${item.date}</span>
-                                <span class="text-xs font-bold px-2 py-1 rounded bg-gray-100 text-gray-600">${item.task}</span>
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-bold text-gray-800">${item.date.split(' ')[0]} <span class="text-sm font-normal text-gray-500">${item.date.split(' ')[1]}</span></span>
+                                ${painBadge}
                             </div>
+                            <div class="font-bold text-gray-900 mb-1">${item.task}</div>
                             <p class="text-xs text-gray-500 mb-2">💡 ${item.focus}</p>
-                            ${item.done ? `<div class="text-sm text-gray-700 mt-2 border-t pt-2"><span class="font-bold">结果:</span> ${item.result} <br><span class="font-bold">感受:</span> ${item.feeling} (痛感:${item.pain})</div>` : ''}
+                            ${item.done ? `<div class="text-sm text-gray-700 mt-2 border-t border-gray-200 pt-2 bg-opacity-50"><span class="font-semibold">📝</span> ${item.result} <br><span class="font-semibold">❤️</span> ${item.feeling}</div>` : ''}
                         </div>
-                        <div class="ml-3 text-xl">${icon}</div>
+                        <div class="ml-3 text-xl mt-1">${icon}</div>
                     </div>
                 `;
                 list.innerHTML += html;
             });
-
-            document.getElementById('progress-text').innerText = `${doneCount}/${plan.length}`;
         }
 
-        // 打开弹窗
         function openModal(index) {
             currentIndex = index;
-            const item = plan[index];
-            document.getElementById('modal-title').innerText = `${item.date} - ${item.task}`;
+            const item = userPlan[index];
+            document.getElementById('modal-title').innerText = item.task;
             document.getElementById('input-result').value = item.result;
             document.getElementById('input-feeling').value = item.feeling;
-            document.getElementById('input-pain').value = item.pain;
+            selectPain(item.pain || 0);
             document.getElementById('modal').classList.remove('hidden');
         }
 
-        // 关闭弹窗
         function closeModal() {
             document.getElementById('modal').classList.add('hidden');
         }
 
-        // 保存数据
+        function selectPain(level) {
+            document.getElementById('input-pain').value = level;
+            document.querySelectorAll('.pain-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-600', 'text-white', 'ring-2', 'ring-blue-300');
+            });
+            if(level !== "") {
+                const btn = document.getElementById(`pain-btn-${level}`);
+                if(btn) btn.classList.add('bg-blue-600', 'text-white', 'ring-2', 'ring-blue-300');
+            }
+        }
+
         function saveData() {
             const result = document.getElementById('input-result').value;
             const feeling = document.getElementById('input-feeling').value;
             const pain = document.getElementById('input-pain').value;
 
-            if (result || feeling) {
-                plan[currentIndex].result = result;
-                plan[currentIndex].feeling = feeling;
-                plan[currentIndex].pain = pain;
-                plan[currentIndex].done = true;
+            if(!result && !feeling) { alert("请至少填写一点内容"); return; }
 
-                // 保存到本地存储
-                localStorage.setItem('marathonPlan', JSON.stringify(plan));
-                render();
-                closeModal();
-            } else {
-                alert("请填写一些内容");
+            userPlan[currentIndex].result = result;
+            userPlan[currentIndex].feeling = feeling;
+            userPlan[currentIndex].pain = pain;
+            userPlan[currentIndex].done = true;
+
+            localStorage.setItem('marathonPlan_v2', JSON.stringify(userPlan));
+            render();
+            closeModal();
+        }
+
+        // 📤 邮件备份功能 (核心)
+        function backupToEmail() {
+            const weekTasks = userPlan.filter(item => item.week === currentWeek && item.done);
+            
+            if(weekTasks.length === 0) {
+                alert("⚠️ 本周还没有打卡记录，先记录一条再备份吧！");
+                return;
             }
+
+            const subject = `🏃‍♂️ 训练日记备份：第 ${currentWeek} 周`;
+            let body = `📅 第 ${currentWeek} 周训练总结\n\n`;
+            
+            weekTasks.forEach(item => {
+                body += `【${item.date}】 ${item.task}\n`;
+                body += `✅ 结果: ${item.result}\n`;
+                body += `❤️ 感受: ${item.feeling} (痛感: ${item.pain}/10)\n`;
+                body += `------------------------------\n`;
+            });
+
+            body += `\n(自动生成自马拉松训练日记 Web App)`;
+
+            // 唤起邮件 APP
+            window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
         }
 
-        // 生成给AI的汇报
+        // 📋 复制汇报功能 (用于发给AI)
         function generateReport() {
-            let report = "这是我的第一周训练反馈：\n\n";
-            plan.forEach(item => {
-                if (item.done) {
-                    report += `📅 ${item.date}: ${item.task}\n`;
-                    report += `   - 结果: ${item.result}\n`;
-                    report += `   - 感受: ${item.feeling}\n`;
-                    report += `   - 痛感: ${item.pain}/10\n\n`;
-                }
-            });
+            let report = `🏃‍♂️ 训练汇报 (第${currentWeek}周)\n\n`;
+            const weekTasks = userPlan.filter(item => item.week === currentWeek && item.done);
+            
+            if(weekTasks.length === 0) {
+                alert("本周还没有打卡哦！");
+                return;
+            }
 
+            weekTasks.forEach(item => {
+                report += `📅 ${item.date}\n✅ ${item.task}\n📝 ${item.result}\n❤️ ${item.feeling} (痛感:${item.pain})\n\n`;
+            });
+            
             navigator.clipboard.writeText(report).then(() => {
-                alert("已复制！请回到对话框粘贴给我。");
-            }).catch(err => {
-                console.error('无法复制', err);
-                alert("复制失败，请手动截图或复制。");
+                alert("已复制！可以去粘贴了。");
             });
         }
 
-        // 初始化
-        render();
-
+        init();
     </script>
 </body>
-
 </html>
