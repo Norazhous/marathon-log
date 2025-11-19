@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>马拉松训练日记 V2.2</title>
+    <title>马拉松训练日记 V2.3</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { background-color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
@@ -86,39 +86,43 @@
 
     <script>
         // ================= 数据定义区域 (前4周) =================
+// ================= 数据定义区域 (针对膝盖内侧痛优化版) =================
         const masterPlan = [
-            // 第1周
-            { week: 1, date: "11/20 (周四)", task: "轻松跑 5公里", focus: "轻松说话，落地轻盈" },
-            { week: 1, date: "11/21 (周五)", task: "休息 & 滚轴放松", focus: "大腿前侧/臀部" },
-            { week: 1, date: "11/22 (周六)", task: "长距离跑 8公里", focus: "跑4分走1分，痛即停" },
-            { week: 1, date: "11/23 (周日)", task: "快走 45分钟", focus: "摆臂快走，替代交叉训练" },
-            { week: 1, date: "11/24 (周一)", task: "休息", focus: "彻底放松" },
-            { week: 1, date: "11/25 (周二)", task: "轻松跑 5公里", focus: "核心收紧，姿势挺拔" },
-            { week: 1, date: "11/26 (周三)", task: "力量训练", focus: "蚌式/臀桥/侧抬腿" },
-            // 第2周
-            { week: 2, date: "11/27 (周四)", task: "轻松跑 6公里", focus: "维持心率平稳" },
-            { week: 2, date: "11/28 (周五)", task: "休息", focus: "泡沫轴放松" },
-            { week: 2, date: "11/29 (周六)", task: "长距离跑 9公里", focus: "跑4走1，注意膝盖" },
-            { week: 2, date: "11/30 (周日)", task: "快走 45分钟", focus: "有氧基础" },
+            // 第1周：适应跑姿与激活内侧肌肉
+            { week: 1, date: "11/20 (周四)", task: "轻松跑 5公里", focus: "跑铁轨：双脚分开约10cm，勿走猫步" },
+            { week: 1, date: "11/21 (周五)", task: "休息 & 拉伸", focus: "重点：蝴蝶式拉伸内侧，禁滚痛点" },
+            { week: 1, date: "11/22 (周六)", task: "长距离跑 8公里", focus: "跑4走1 | 膝盖对准脚尖，防内扣" },
+            { week: 1, date: "11/23 (周日)", task: "快走 45分钟", focus: "保持有氧，注意脚步宽度" },
+            { week: 1, date: "11/24 (周一)", task: "休息", focus: "彻底放松，多睡一会" },
+            { week: 1, date: "11/25 (周二)", task: "轻松跑 5公里", focus: "核心收紧，落地轻盈" },
+            { week: 1, date: "11/26 (周三)", task: "力量训练 (内侧)", focus: "必做：靠墙夹球静蹲 + 蚌式开合" },
+            
+            // 第2周：巩固跑姿
+            { week: 2, date: "11/27 (周四)", task: "轻松跑 6公里", focus: "维持双脚宽度，呼吸平稳" },
+            { week: 2, date: "11/28 (周五)", task: "休息", focus: "拉伸大腿后侧与内侧" },
+            { week: 2, date: "11/29 (周六)", task: "长距离跑 9公里", focus: "跑4走1 | 关注膝盖内侧感受" },
+            { week: 2, date: "11/30 (周日)", task: "快走 45分钟", focus: "替代交叉训练" },
             { week: 2, date: "12/01 (周一)", task: "休息", focus: "恢复" },
-            { week: 2, date: "12/02 (周二)", task: "轻松跑 5公里", focus: "步频练习" },
-            { week: 2, date: "12/03 (周三)", task: "力量训练", focus: "增加一组(4组)" },
-            // 第3周
-            { week: 3, date: "12/04 (周四)", task: "轻松跑 6公里", focus: "呼吸节奏" },
+            { week: 2, date: "12/02 (周二)", task: "轻松跑 5公里", focus: "步频180左右，小步快跑" },
+            { week: 2, date: "12/03 (周三)", task: "力量训练", focus: "靠墙静蹲时间增加10秒" },
+            
+            // 第3周：轻微进阶
+            { week: 3, date: "12/04 (周四)", task: "轻松跑 6公里", focus: "关注落地声音，要轻" },
             { week: 3, date: "12/05 (周五)", task: "休息", focus: "拉伸屈髋肌" },
-            { week: 3, date: "12/06 (周六)", task: "长距离跑 10公里", focus: "跑4走1，突破双位数" },
-            { week: 3, date: "12/07 (周日)", task: "快走 50分钟", focus: "耐力" },
+            { week: 3, date: "12/06 (周六)", task: "长距离跑 10公里", focus: "跑4走1 | 突破双位数" },
+            { week: 3, date: "12/07 (周日)", task: "快走 50分钟", focus: "耐力建设" },
             { week: 3, date: "12/08 (周一)", task: "休息", focus: "恢复" },
             { week: 3, date: "12/09 (周二)", task: "轻松跑 6公里", focus: "放松肩膀" },
-            { week: 3, date: "12/10 (周三)", task: "力量训练", focus: "核心+臀部" },
-            // 第4周
-            { week: 4, date: "12/11 (周四)", task: "轻松跑 5公里", focus: "非常轻松" },
+            { week: 3, date: "12/10 (周三)", task: "力量训练", focus: "核心+臀部+内侧头" },
+            
+            // 第4周：减量恢复
+            { week: 4, date: "12/11 (周四)", task: "轻松跑 5公里", focus: "非常轻松，享受跑步" },
             { week: 4, date: "12/12 (周五)", task: "休息", focus: "多睡觉" },
-            { week: 4, date: "12/13 (周六)", task: "长距离跑 8公里", focus: "减量恢复" },
+            { week: 4, date: "12/13 (周六)", task: "长距离跑 8公里", focus: "减量周，让身体修复" },
             { week: 4, date: "12/14 (周日)", task: "快走 30分钟", focus: "轻松活动" },
             { week: 4, date: "12/15 (周一)", task: "休息", focus: "恢复" },
-            { week: 4, date: "12/16 (周二)", task: "轻松跑 4公里", focus: "享受跑步" },
-            { week: 4, date: "12/17 (周三)", task: "力量训练", focus: "减少组数" },
+            { week: 4, date: "12/16 (周二)", task: "轻松跑 4公里", focus: "状态检查" },
+            { week: 4, date: "12/17 (周三)", task: "力量训练 (轻量)", focus: "减少组数" },
         ];
 
         let userPlan = [];
