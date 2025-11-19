@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>马拉松训练日记 V2.3</title>
+    <title>马拉松训练日记 V3.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { background-color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
@@ -11,6 +11,12 @@
         .card:active { transform: scale(0.98); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* 动作打卡样式优化 */
+        .action-item { transition: all 0.2s; }
+        .action-item.checked { background-color: #effdf5; border-color: #86efac; }
+        .action-item.checked .check-box { background-color: #22c55e; border-color: #22c55e; }
+        .action-item.checked .action-name { color: #166534; text-decoration: line-through; opacity: 0.8; }
     </style>
 </head>
 <body class="pb-24">
@@ -50,25 +56,32 @@
         </div>
 
     <div id="modal" class="fixed inset-0 bg-black bg-opacity-60 hidden flex items-end justify-center z-50 backdrop-blur-sm">
-        <div class="bg-white w-full rounded-t-2xl p-6 h-3/4 overflow-y-auto animate-slide-up">
-            <div class="flex justify-between items-center mb-4">
+        <div class="bg-white w-full rounded-t-2xl p-6 h-5/6 overflow-y-auto animate-slide-up flex flex-col">
+            <div class="flex justify-between items-center mb-4 flex-shrink-0">
                 <h2 class="text-xl font-bold text-blue-800" id="modal-title">编辑记录</h2>
                 <button onclick="closeModal()" class="text-gray-400 text-2xl">&times;</button>
             </div>
             
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">✅ 实际完成情况</label>
-                    <input type="text" id="input-result" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" placeholder="例如：5.2公里，用时36分">
+            <div class="space-y-5 flex-grow overflow-y-auto pb-20">
+                
+                <div id="action-section">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">💪 今日动作 (点击查看要点并勾选)</label>
+                    <div id="action-list" class="space-y-2">
+                        </div>
+                </div>
+
+                <div class="border-t pt-4">
+                    <label class="block text-sm font-bold text-gray-700 mb-1">✅ 跑步数据 / 实际完成</label>
+                    <input type="text" id="input-result" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" placeholder="例：5.02公里，35分钟">
                 </div>
 
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">🦵 身体感受 (重点记录膝盖)</label>
-                    <textarea id="input-feeling" rows="3" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" placeholder="膝盖有无疼痛？哪儿紧？"></textarea>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">🦵 身体感受 (膝盖/髂胫束)</label>
+                    <textarea id="input-feeling" rows="2" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" placeholder="膝盖内侧感觉如何？"></textarea>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">📉 痛感打分 (0无痛 - 10剧痛)</label>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">📉 痛感打分 (0-10)</label>
                     <div class="flex space-x-2 overflow-x-auto py-2 no-scrollbar">
                         <script>
                             for(let i=0; i<=10; i++) {
@@ -78,51 +91,101 @@
                     </div>
                     <input type="hidden" id="input-pain">
                 </div>
+                
+                <div class="h-10"></div> </div>
 
-                <button onclick="saveData()" class="w-full bg-blue-600 active:bg-blue-700 text-white py-3 rounded-xl font-bold text-lg shadow-lg mt-4">保存打卡</button>
+            <div class="absolute bottom-0 left-0 w-full p-4 bg-white border-t border-gray-100">
+                <button onclick="saveData()" class="w-full bg-blue-600 active:bg-blue-700 text-white py-3 rounded-xl font-bold text-lg shadow-lg">保存打卡</button>
             </div>
         </div>
     </div>
 
     <script>
-        // ================= 数据定义区域 (前4周) =================
-// ================= 数据定义区域 (针对膝盖内侧痛优化版) =================
+        // ================= 数据定义 (包含动作要点 V3.1) =================
         const masterPlan = [
-            // 第1周：适应跑姿与激活内侧肌肉
-            { week: 1, date: "11/20 (周四)", task: "轻松跑 5公里", focus: "跑铁轨：双脚分开约10cm，勿走猫步" },
-            { week: 1, date: "11/21 (周五)", task: "休息 & 拉伸", focus: "重点：蝴蝶式拉伸内侧，禁滚痛点" },
-            { week: 1, date: "11/22 (周六)", task: "长距离跑 8公里", focus: "跑4走1 | 膝盖对准脚尖，防内扣" },
-            { week: 1, date: "11/23 (周日)", task: "快走 45分钟", focus: "保持有氧，注意脚步宽度" },
-            { week: 1, date: "11/24 (周一)", task: "休息", focus: "彻底放松，多睡一会" },
-            { week: 1, date: "11/25 (周二)", task: "轻松跑 5公里", focus: "核心收紧，落地轻盈" },
-            { week: 1, date: "11/26 (周三)", task: "力量训练 (内侧)", focus: "必做：靠墙夹球静蹲 + 蚌式开合" },
+            // 第1周
+            { 
+                week: 1, date: "11/20 (周四)", task: "轻松跑 5公里", focus: "跑铁轨 (双脚分宽)", 
+                actions: [
+                    {name: "跑铁轨姿势确认", desc: "想象地上有两条轨，左脚踩左轨，右脚踩右轨，间距10cm", done: false},
+                    {name: "跑后拉伸 (蝴蝶式)", desc: "脚心相对，背挺直，膝盖向下压，保持30秒", done: false},
+                    {name: "睡前 VMO 激活 (10次)", desc: "坐姿伸直腿，手指按住膝盖内上方肌肉，用力收缩变硬", done: false}
+                ] 
+            },
+            { 
+                week: 1, date: "11/21 (周五)", task: "休息 & 拉伸", focus: "重点拉伸内侧", 
+                actions: [
+                    {name: "蝴蝶式拉伸 (3组)", desc: "针对大腿内侧，不要用力猛压，有拉伸感即可", done: false},
+                    {name: "大腿后侧拉伸", desc: "脚跟架高，勾脚尖，身体前倾，感受大腿后侧拉伸", done: false},
+                    {name: "泡沫轴滚臀部", desc: "针对屁股肌肉滚压，严禁滚压膝盖内侧痛点！", done: false}
+                ]
+            },
+            { 
+                week: 1, date: "11/22 (周六)", task: "长距离跑 8公里", focus: "跑4走1 | 防内扣", 
+                actions: [
+                    {name: "严格跑4走1", desc: "手机设定4分钟跑，1分钟走，不看配速看时间", done: false},
+                    {name: "防内扣意识", desc: "落地时膝盖向第二脚趾方向看齐，不要向内倒", done: false},
+                    {name: "跑后拉伸全套", desc: "臀部、大腿前后侧、内侧都要拉伸", done: false}
+                ]
+            },
+            { 
+                week: 1, date: "11/23 (周日)", task: "快走 45分 + 核心", focus: "有氧 + 核心强化", 
+                actions: [
+                    {name: "快走 45分钟", desc: "摆臂幅度大，步伐快，身体微微出汗", done: false},
+                    {name: "平板支撑 (3组x60秒)", desc: "身体成一条直线，收紧核心，不要塌腰", done: false},
+                    {name: "死虫式 (3组x15次)", desc: "腰背紧贴地面，对侧手脚伸展，呼吸配合", done: false},
+                    {name: "俯卧撑 (3组)", desc: "常规或跪姿，感受胸肌和手臂发力", done: false}
+                ]
+            },
+            { 
+                week: 1, date: "11/24 (周一)", task: "休息", focus: "彻底放松", 
+                actions: [
+                    {name: "充足睡眠", desc: "保证8小时睡眠，修复肌肉组织", done: false}
+                ]
+            },
+            { 
+                week: 1, date: "11/25 (周二)", task: "轻松跑 5公里", focus: "落地轻盈", 
+                actions: [
+                    {name: "跑步 5km", desc: "核心收紧，想象头顶有线拉着", done: false},
+                    {name: "VMO 激活 (10次)", desc: "坐姿伸直腿用力收缩内侧头，每次保持5秒", done: false}
+                ]
+            },
+            { 
+                week: 1, date: "11/26 (周三)", task: "力量训练 (腿部)", focus: "靠墙夹球 + 蚌式", 
+                actions: [
+                    {name: "靠墙夹球静蹲 (3组x45秒)", desc: "背贴墙，膝盖夹球/毛巾，大腿水平，激活内侧头", done: false},
+                    {name: "蚌式开合 (3组x15次)", desc: "侧卧，骨盆垂直地面不要翻转，臀外侧发力", done: false},
+                    {name: "侧卧抬腿 (3组x15次)", desc: "脚尖朝下(内旋)，直腿上抬，针对臀中肌", done: false},
+                    {name: "直腿内收 (3组x15次)", desc: "侧卧，下方腿用力上抬，针对大腿内侧", done: false}
+                ]
+            },
             
-            // 第2周：巩固跑姿
-            { week: 2, date: "11/27 (周四)", task: "轻松跑 6公里", focus: "维持双脚宽度，呼吸平稳" },
-            { week: 2, date: "11/28 (周五)", task: "休息", focus: "拉伸大腿后侧与内侧" },
-            { week: 2, date: "11/29 (周六)", task: "长距离跑 9公里", focus: "跑4走1 | 关注膝盖内侧感受" },
-            { week: 2, date: "11/30 (周日)", task: "快走 45分钟", focus: "替代交叉训练" },
-            { week: 2, date: "12/01 (周一)", task: "休息", focus: "恢复" },
-            { week: 2, date: "12/02 (周二)", task: "轻松跑 5公里", focus: "步频180左右，小步快跑" },
-            { week: 2, date: "12/03 (周三)", task: "力量训练", focus: "靠墙静蹲时间增加10秒" },
-            
-            // 第3周：轻微进阶
-            { week: 3, date: "12/04 (周四)", task: "轻松跑 6公里", focus: "关注落地声音，要轻" },
-            { week: 3, date: "12/05 (周五)", task: "休息", focus: "拉伸屈髋肌" },
-            { week: 3, date: "12/06 (周六)", task: "长距离跑 10公里", focus: "跑4走1 | 突破双位数" },
-            { week: 3, date: "12/07 (周日)", task: "快走 50分钟", focus: "耐力建设" },
-            { week: 3, date: "12/08 (周一)", task: "休息", focus: "恢复" },
-            { week: 3, date: "12/09 (周二)", task: "轻松跑 6公里", focus: "放松肩膀" },
-            { week: 3, date: "12/10 (周三)", task: "力量训练", focus: "核心+臀部+内侧头" },
-            
-            // 第4周：减量恢复
-            { week: 4, date: "12/11 (周四)", task: "轻松跑 5公里", focus: "非常轻松，享受跑步" },
-            { week: 4, date: "12/12 (周五)", task: "休息", focus: "多睡觉" },
-            { week: 4, date: "12/13 (周六)", task: "长距离跑 8公里", focus: "减量周，让身体修复" },
-            { week: 4, date: "12/14 (周日)", task: "快走 30分钟", focus: "轻松活动" },
-            { week: 4, date: "12/15 (周一)", task: "休息", focus: "恢复" },
-            { week: 4, date: "12/16 (周二)", task: "轻松跑 4公里", focus: "状态检查" },
-            { week: 4, date: "12/17 (周三)", task: "力量训练 (轻量)", focus: "减少组数" },
+            // 第2周
+            { week: 2, date: "11/27 (周四)", task: "轻松跑 6公里", focus: "维持双脚宽度", actions: [{name: "跑步 6km", desc: "保持跑铁轨跑姿", done: false}, {name: "VMO 激活", desc: "每侧10次，每次5秒顶峰收缩", done: false}] },
+            { week: 2, date: "11/28 (周五)", task: "休息", focus: "拉伸", actions: [{name: "蝴蝶式拉伸", desc: "保持背部挺直", done: false}] },
+            { week: 2, date: "11/29 (周六)", task: "长距离跑 9公里", focus: "跑4走1", actions: [{name: "跑9km (跑走结合)", desc: "跑4分走1分，注意膝盖内侧感受", done: false}, {name: "跑后拉伸", desc: "全套下肢拉伸", done: false}] },
+            { week: 2, date: "11/30 (周日)", task: "快走 45分 + 核心", focus: "增加核心强度", actions: [{name: "快走45min", desc: "保持配速", done: false}, {name: "平板支撑", desc: "增加10秒或负重", done: false}, {name: "死虫式", desc: "动作放慢，控制核心", done: false}] },
+            { week: 2, date: "12/01 (周一)", task: "休息", focus: "恢复", actions: [{name: "休息", desc: "彻底放松", done: false}] },
+            { week: 2, date: "12/02 (周二)", task: "轻松跑 5公里", focus: "步频180", actions: [{name: "跑步 5km", desc: "小步快跑，减少触地时间", done: false}, {name: "VMO 激活", desc: "日常保养", done: false}] },
+            { week: 2, date: "12/03 (周三)", task: "力量训练 (腿部)", focus: "增加静蹲时间", actions: [{name: "靠墙夹球 (3组x60秒)", desc: "增加时间到60秒", done: false}, {name: "蚌式开合 (4组)", desc: "增加一组", done: false}] },
+
+             // 第3周
+            { week: 3, date: "12/04 (周四)", task: "轻松跑 6公里", focus: "呼吸", actions: [{name: "跑步 6km", desc: "三步一呼三步一吸", done: false}] },
+            { week: 3, date: "12/05 (周五)", task: "休息", focus: "拉伸", actions: [{name: "拉伸", desc: "全身放松", done: false}] },
+            { week: 3, date: "12/06 (周六)", task: "长距离跑 10公里", focus: "突破双位数", actions: [{name: "跑10km", desc: "跑4走1，关注体能分配", done: false}] },
+            { week: 3, date: "12/07 (周日)", task: "快走 50分 + 核心", focus: "耐力", actions: [{name: "快走50min", desc: "延长时间", done: false}, {name: "核心训练", desc: "全套核心动作", done: false}] },
+            { week: 3, date: "12/08 (周一)", task: "休息", focus: "恢复", actions: [{name: "休息", desc: "", done: false}] },
+            { week: 3, date: "12/09 (周二)", task: "轻松跑 6公里", focus: "放松", actions: [{name: "跑步 6km", desc: "肩膀下沉放松", done: false}] },
+            { week: 3, date: "12/10 (周三)", task: "力量训练", focus: "全套腿部", actions: [{name: "腿部力量全套", desc: "保持强度", done: false}] },
+
+            // 第4周
+            { week: 4, date: "12/11 (周四)", task: "轻松跑 5公里", focus: "轻松", actions: [{name: "跑步 5km", desc: "减量跑，很轻松", done: false}] },
+            { week: 4, date: "12/12 (周五)", task: "休息", focus: "睡眠", actions: [{name: "休息", desc: "", done: false}] },
+            { week: 4, date: "12/13 (周六)", task: "长距离跑 8公里", focus: "减量", actions: [{name: "跑8km", desc: "缩短距离，身体充电", done: false}] },
+            { week: 4, date: "12/14 (周日)", task: "快走 30分", focus: "放松", actions: [{name: "快走30min", desc: "随便走走", done: false}] },
+            { week: 4, date: "12/15 (周一)", task: "休息", focus: "恢复", actions: [{name: "休息", desc: "", done: false}] },
+            { week: 4, date: "12/16 (周二)", task: "轻松跑 4公里", focus: "状态", actions: [{name: "跑步 4km", desc: "检查身体状态", done: false}] },
+            { week: 4, date: "12/17 (周三)", task: "力量训练 (轻)", focus: "自重训练", actions: [{name: "轻量深蹲", desc: "不负重", done: false}, {name: "轻量蚌式", desc: "不用弹力带", done: false}] },
         ];
 
         let userPlan = [];
@@ -130,12 +193,24 @@
         let currentIndex = null;
 
         function init() {
-            const storedData = JSON.parse(localStorage.getItem('marathonPlan_v2')) || [];
+            const storedData = JSON.parse(localStorage.getItem('marathonPlan_v3')) || [];
             
             userPlan = masterPlan.map((item, index) => {
                 const saved = storedData[index];
+                let mergedActions = item.actions.map(act => ({ ...act }));
+
+                if (saved && saved.actions) {
+                    mergedActions = item.actions.map((act, i) => {
+                        if (saved.actions[i] && saved.actions[i].name === act.name) {
+                            return { ...act, done: saved.actions[i].done };
+                        }
+                        return act;
+                    });
+                }
+
                 return {
                     ...item,
+                    actions: mergedActions,
                     result: saved ? saved.result : "",
                     feeling: saved ? saved.feeling : "",
                     pain: saved ? saved.pain : "",
@@ -164,17 +239,21 @@
                 const statusClass = item.done ? 'bg-green-50 border-green-500 border-l-4' : 'bg-white border-l-4 border-blue-200';
                 const icon = item.done ? '✅' : '⭕️';
                 const painBadge = item.pain ? `<span class="ml-2 text-xs px-2 py-0.5 rounded ${item.pain > 2 ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}">痛感:${item.pain}</span>` : '';
+                
+                const actionDone = item.actions.filter(a => a.done).length;
+                const actionTotal = item.actions.length;
+                const actionBadge = actionTotal > 0 ? `<span class="text-xs text-blue-600 bg-blue-50 px-1 rounded ml-1">动作:${actionDone}/${actionTotal}</span>` : '';
 
                 const html = `
                     <div onclick="openModal(${realIndex})" class="card cursor-pointer rounded-xl p-4 shadow-sm flex justify-between items-start mb-3 ${statusClass}">
                         <div class="flex-1">
                             <div class="flex justify-between items-center mb-1">
-                                <span class="font-bold text-gray-800">${item.date.split(' ')[0]} <span class="text-sm font-normal text-gray-500">${item.date.split(' ')[1]}</span></span>
+                                <span class="font-bold text-gray-800 text-sm">${item.date.split(' ')[0]} <span class="font-normal text-gray-500">${item.date.split(' ')[1]}</span></span>
                                 ${painBadge}
                             </div>
                             <div class="font-bold text-gray-900 mb-1">${item.task}</div>
-                            <p class="text-xs text-gray-500 mb-2">💡 ${item.focus}</p>
-                            ${item.done ? `<div class="text-sm text-gray-700 mt-2 border-t border-gray-200 pt-2 bg-opacity-50"><span class="font-semibold">📝</span> ${item.result} <br><span class="font-semibold">❤️</span> ${item.feeling}</div>` : ''}
+                            <p class="text-xs text-gray-500 mb-2">💡 ${item.focus} ${actionBadge}</p>
+                            ${item.done ? `<div class="text-xs text-gray-700 mt-2 border-t border-gray-200 pt-2 bg-opacity-50">📝 ${item.result} <br>❤️ ${item.feeling}</div>` : ''}
                         </div>
                         <div class="ml-3 text-xl mt-1">${icon}</div>
                     </div>
@@ -190,86 +269,12 @@
             document.getElementById('input-result').value = item.result;
             document.getElementById('input-feeling').value = item.feeling;
             selectPain(item.pain || 0);
-            document.getElementById('modal').classList.remove('hidden');
-        }
-
-        function closeModal() {
-            document.getElementById('modal').classList.add('hidden');
-        }
-
-        function selectPain(level) {
-            document.getElementById('input-pain').value = level;
-            document.querySelectorAll('.pain-btn').forEach(btn => {
-                btn.classList.remove('bg-blue-600', 'text-white', 'ring-2', 'ring-blue-300');
-            });
-            if(level !== "") {
-                const btn = document.getElementById(`pain-btn-${level}`);
-                if(btn) btn.classList.add('bg-blue-600', 'text-white', 'ring-2', 'ring-blue-300');
-            }
-        }
-
-        function saveData() {
-            const result = document.getElementById('input-result').value;
-            const feeling = document.getElementById('input-feeling').value;
-            const pain = document.getElementById('input-pain').value;
-
-            if(!result && !feeling) { alert("请至少填写一点内容"); return; }
-
-            userPlan[currentIndex].result = result;
-            userPlan[currentIndex].feeling = feeling;
-            userPlan[currentIndex].pain = pain;
-            userPlan[currentIndex].done = true;
-
-            localStorage.setItem('marathonPlan_v2', JSON.stringify(userPlan));
-            render();
-            closeModal();
-        }
-
-        // 📤 邮件备份功能 (核心)
-        function backupToEmail() {
-            const weekTasks = userPlan.filter(item => item.week === currentWeek && item.done);
             
-            if(weekTasks.length === 0) {
-                alert("⚠️ 本周还没有打卡记录，先记录一条再备份吧！");
-                return;
-            }
-
-            const subject = `🏃‍♂️ 训练日记备份：第 ${currentWeek} 周`;
-            let body = `📅 第 ${currentWeek} 周训练总结\n\n`;
-            
-            weekTasks.forEach(item => {
-                body += `【${item.date}】 ${item.task}\n`;
-                body += `✅ 结果: ${item.result}\n`;
-                body += `❤️ 感受: ${item.feeling} (痛感: ${item.pain}/10)\n`;
-                body += `------------------------------\n`;
-            });
-
-            body += `\n(自动生成自马拉松训练日记 Web App)`;
-
-            // 唤起邮件 APP
-            window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-        }
-
-        // 📋 复制汇报功能 (用于发给AI)
-        function generateReport() {
-            let report = `🏃‍♂️ 训练汇报 (第${currentWeek}周)\n\n`;
-            const weekTasks = userPlan.filter(item => item.week === currentWeek && item.done);
-            
-            if(weekTasks.length === 0) {
-                alert("本周还没有打卡哦！");
-                return;
-            }
-
-            weekTasks.forEach(item => {
-                report += `📅 ${item.date}\n✅ ${item.task}\n📝 ${item.result}\n❤️ ${item.feeling} (痛感:${item.pain})\n\n`;
-            });
-            
-            navigator.clipboard.writeText(report).then(() => {
-                alert("已复制！可以去粘贴了。");
-            });
-        }
-
-        init();
-    </script>
-</body>
-</html>
+            const actionList = document.getElementById('action-list');
+            actionList.innerHTML = '';
+            if (item.actions && item.actions.length > 0) {
+                document.getElementById('action-section').classList.remove('hidden');
+                item.actions.forEach((action, i) => {
+                    const checkedClass = action.done ? 'checked' : 'bg-white border-gray-200';
+                    const checkIcon = action.done ? '✓' : '';
+                    const checkBg = action.done ? 'bg-
