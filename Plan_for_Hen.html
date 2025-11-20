@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marathon Log V4.0 (Patellar Rehab)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+        .card { transition: all 0.2s; }
+        .card:active { transform: scale(0.98); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .action-item { transition: all 0.2s; }
+        .action-item.checked { background-color: #effdf5; border-color: #86efac; }
+        .action-item.checked .check-box { background-color: #22c55e; border-color: #22c55e; }
+        .action-item.checked .action-name { color: #166534; text-decoration: line-through; opacity: 0.8; }
+    </style>
+</head>
+<body class="pb-24">
+
+    <div class="bg-indigo-700 text-white p-4 sticky top-0 z-20 shadow-md">
+        <div class="flex justify-between items-center mb-3">
+            <h1 class="text-lg font-bold">🛡️ Patellar Rehab Plan</h1>
+            <div class="flex space-x-2">
+                <button onclick="generateReport()" class="bg-green-500 text-xs px-3 py-1.5 rounded shadow hover:bg-green-600 font-medium">
+                    📋 Copy
+                </button>
+            </div>
+        </div>
+        
+        <select id="week-selector" onchange="changeWeek()" class="w-full p-2 text-black rounded-lg outline-none font-bold shadow-inner bg-indigo-50">
+            <option value="1">Week 1: Pain Relief & Mechanics</option>
+            <option value="2">Week 2: Tendon Loading</option>
+            <option value="3">Week 3: Building Resilience</option>
+            <option value="4">Week 4: Recovery</option>
+        </select>
+    </div>
+
+    <div class="px-4 pt-4">
+        <div class="flex justify-between text-xs text-gray-500 mb-1">
+            <span>Weekly Progress</span>
+            <span id="progress-text">0/7</span>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-2.5">
+            <div id="progress-bar" class="bg-indigo-600 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+        </div>
+    </div>
+
+    <div id="schedule-list" class="p-4 space-y-3">
+        </div>
+
+    <div id="modal" class="fixed inset-0 bg-black bg-opacity-60 hidden flex items-end justify-center z-50 backdrop-blur-sm">
+        <div class="bg-white w-full rounded-t-2xl p-6 h-5/6 overflow-y-auto animate-slide-up flex flex-col">
+            <div class="flex justify-between items-center mb-4 flex-shrink-0">
+                <h2 class="text-xl font-bold text-indigo-800" id="modal-title">Edit Record</h2>
+                <button onclick="closeModal()" class="text-gray-400 text-2xl">&times;</button>
+            </div>
+            
+            <div class="space-y-5 flex-grow overflow-y-auto pb-20">
+                
+                <div id="action-section">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">💪 Rehab Actions (Tap to Check)</label>
+                    <div id="action-list" class="space-y-2">
+                        </div>
+                </div>
+
+                <div class="border-t pt-4">
+                    <label class="block text-sm font-bold text-gray-700 mb-1">✅ Result (Dist/Time)</label>
+                    <input type="text" id="input-result" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" placeholder="e.g., 5.02km, 35min">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">🦵 Knee Sensation (Front/Below Cap)</label>
+                    <textarea id="input-feeling" rows="2" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Is the tendon sore?"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">📉 Pain Level (0-10)</label>
+                    <div class="flex space-x-2 overflow-x-auto py-2 no-scrollbar">
+                        <script>
+                            for(let i=0; i<=10; i++) {
+                                document.write(`<div onclick="selectPain(${i})" id="pain-btn-${i}" class="pain-btn flex-shrink-0 w-10 h-10 rounded-full border flex items-center justify-center cursor-pointer font-bold ${i>=3 ? 'border-red-200 text-red-600' : 'border-green-200 text-green-600'}">${i}</div>`);
+                            }
+                        </script>
+                    </div>
+                    <input type="hidden" id="input-pain">
+                </div>
+                
+                <div class="h-10"></div> </div>
+
+            <div class="absolute bottom-0 left-0 w-full p-4 bg-white border-t border-gray-100">
+                <button onclick="saveData()" class="w-full bg-indigo-600 active:bg-indigo-700 text-white py-3 rounded-xl font-bold text-lg shadow-lg">Save Record</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ================= DATA DEFINITION (V4.0 - Anterior Knee/Patellar Focus) =================
+        const masterPlan = [
+            // Week 1: Focus on High Cadence & Isometric Pain Relief
+            { 
+                week: 1, date: "Day 1 (Thu)", task: "Easy Run 5km", focus: "High Cadence (180spm)", 
+                actions: [
+                    {name: "Check Cadence", desc: "Smaller steps, land under hips, NO overstriding", done: false},
+                    {name: "Spanish Squats (5x45s)", desc: "Isometric hold. Essential for tendon pain relief", done: false},
+                    {name: "Couch Stretch", desc: "Stretch quads against wall/sofa, 2min each leg", done: false}
+                ] 
+            },
+            { 
+                week: 1, date: "Day 2 (Fri)", task: "Strength (Core/Glutes)", focus: "Unload the Quads", 
+                actions: [
+                    {name: "Glute Bridge (3x15)", desc: "Wake up glutes to help quads", done: false},
+                    {name: "Clamshells (3x15)", desc: "Hip stability", done: false},
+                    {name: "Plank (3x45s)", desc: "Core stability", done: false},
+                    {name: "Foam Roll Quads", desc: "Roll the muscle belly, NOT the bone/tendon", done: false}
+                ]
+            },
+            { 
+                week: 1, date: "Day 3 (Sat)", task: "Long Run 8km", focus: "Soft Landing / Flat Route", 
+                actions: [
+                    {name: "Avoid Hills", desc: "Downhills kill the patellar tendon right now", done: false},
+                    {name: "Run 4 / Walk 1", desc: "Intervals to manage load", done: false},
+                    {name: "Couch Stretch (Post-run)", desc: "Must do immediately after run", done: false}
+                ]
+            },
+            { 
+                week: 1, date: "Day 4 (Sun)", task: "Power Walk + Iso", focus: "Active Recovery", 
+                actions: [
+                    {name: "Power Walk 45min", desc: "Fast walking, engage glutes", done: false},
+                    {name: "Spanish Squats (5x45s)", desc: "Do this again to reduce pain", done: false},
+                    {name: "Tibialis Raises (3x15)", desc: "Lean on wall, lift toes. Balances the knee", done: false}
+                ]
+            },
+            { 
+                week: 1, date: "Day 5 (Mon)", task: "Rest Day", focus: "Tendon Repair", 
+                actions: [
+                    {name: "Sleep 8hr+", desc: "Tendons heal while you sleep", done: false}
+                ]
+            },
+            { 
+                week: 1, date: "Day 6 (Tue)", task: "Easy Run 5km", focus: "Silent Feet", 
+                actions: [
+                    {name: "Run 5km", desc: "Try to make zero noise when landing", done: false},
+                    {name: "Spanish Squats (Pre-run)", desc: "Warm up the tendon", done: false}
+                ]
+            },
+            { 
+                week: 1, date: "Day 7 (Wed)", task: "Strength (Eccentric)", focus: "Eccentric Loading", 
+                actions: [
+                    {name: "Slow Squats (3x10)", desc: "3 sec down, 1 sec up. Focus on the down phase", done: false},
+                    {name: "Split Squats (3x10)", desc: "Vertical shin, don't let knee shove forward too much yet", done: false},
+                    {name: "Calf Raises (3x15)", desc: "Strong calves protect knees", done: false},
+                    {name: "Couch Stretch", desc: "Daily requirement", done: false}
+                ]
+            },
+            
+            // Week 2: Building Tolerance
+            { week: 2, date: "Day 1 (Thu)", task: "Easy Run 6km", focus: "Cadence Check", actions: [{name: "Run 6km", desc: "Count steps: aim for 170-180", done: false}, {name: "Spanish Squats", desc: "Iso hold 45s", done: false}] },
+            { week: 2, date: "Day 2 (Fri)", task: "Strength (Glutes)", focus: "Posterior Chain", actions: [{name: "RDLs", desc: "Hamstrings focus", done: false}, {name: "Side Plank", desc: "", done: false}, {name: "Foam Roll Quads", desc: "", done: false}] },
+            { week: 2, date: "Day 3 (Sat)", task: "Long Run 9km", focus: "Flat & Soft", actions: [{name: "Run 9km", desc: "Run 4/Walk 1", done: false}, {name: "Couch Stretch", desc: "2 min/side", done: false}] },
+            { week: 2, date: "Day 4 (Sun)", task: "Walk + Rehab", focus: "Tendon Health", actions: [{name: "Walk 45min", desc: "", done: false}, {name: "Spanish Squats", desc: "Heavy hold", done: false}, {name: "Tibialis Raise", desc: "25 reps", done: false}] },
+            { week: 2, date: "Day 5 (Mon)", task: "Rest Day", focus: "Recovery", actions: [{name: "Rest", desc: "", done: false}] },
+            { week: 2, date: "Day 6 (Tue)", task: "Easy Run 5km", focus: "Land under hips", actions: [{name: "Run 5km", desc: "Don't reach leg out", done: false}, {name: "Couch Stretch", desc: "", done: false}] },
+            { week: 2, date: "Day 7 (Wed)", task: "Strength (Eccentric)", focus: "Load Tendon", actions: [{name: "Decline Squats", desc: "Heels elevated, slow down", done: false}, {name: "Poliquin Step Up", desc: "Heel elevated step up", done: false}] },
+
+             // Week 3
+            { week: 3, date: "Day 1 (Thu)", task: "Easy Run 6km", focus: "Cadence", actions: [{name: "Run 6km", desc: "", done: false}] },
+            { week: 3, date: "Day 2 (Fri)", task: "Strength (Core)", focus: "Stability", actions: [{name: "Dead Bugs", desc: "", done: false}, {name: "Plank", desc: "", done: false}] },
+            { week: 3, date: "Day 3 (Sat)", task: "Long Run 10km", focus: "Endurance", actions: [{name: "Run 10km", desc: "Watch form when tired", done: false}] },
+            { week: 3, date: "Day 4 (Sun)", task: "Walk + Rehab", focus: "Health", actions: [{name: "Spanish Squats", desc: "Maintenance", done: false}, {name: "Couch Stretch", desc: "", done: false}] },
+            { week: 3, date: "Day 5 (Mon)", task: "Rest Day", focus: "Recovery", actions: [{name: "Rest", desc: "", done: false}] },
+            { week: 3, date: "Day 6 (Tue)", task: "Easy Run 6km", focus: "Smooth", actions: [{name: "Run 6km", desc: "", done: false}] },
+            { week: 3, date: "Day 7 (Wed)", task: "Strength (Legs)", focus: "Strength", actions: [{name: "Squats", desc: "Full depth if pain free", done: false}] },
+
+            // Week 4
+            { week: 4, date: "Day 1 (Thu)", task: "Easy Run 5km", focus: "Easy", actions: [{name: "Run 5km", desc: "", done: false}] },
+            { week: 4, date: "Day 2 (Fri)", task: "Rest", focus: "Sleep", actions: [{name: "Stretch", desc: "", done: false}] },
+            { week: 4, date: "Day 3 (Sat)", task: "Long Run 8km", focus: "Cutback", actions: [{name: "Run 8km", desc: "Enjoy it", done: false}] },
+            { week: 4, date: "Day 4 (Sun)", task: "Walk 30min", focus: "Relax", actions: [{name: "Walk", desc: "", done: false}] },
+            { week: 4, date: "Day 5 (Mon)", task: "Rest", focus: "Recovery", actions: [{name: "Rest", desc: "", done: false}] },
+            { week: 4, date: "Day 6 (Tue)", task: "Easy Run 4km", focus: "Check", actions: [{name: "Run 4km", desc: "", done: false}] },
+            { week: 4, date: "Day 7 (Wed)", task: "Strength (Light)", focus: "Mobility", actions: [{name: "Couch Stretch", desc: "", done: false}] },
+        ];
+
+        let userPlan = [];
+        let currentWeek = 1;
+        let currentIndex = null;
+
+        function init() {
+            // Use a DIFFERENT storage key for this new person to avoid conflict
+            const storedData = JSON.parse(localStorage.getItem('marathonPlan_patellar')) || [];
+            
+            userPlan = masterPlan.map((item, index) => {
+                const saved = storedData[index];
+                let mergedActions = item.actions.map(act => ({ ...act }));
+
+                if (saved && saved.actions) {
+                    mergedActions = item.actions.map((act, i) => {
+                        if (saved.actions[i]) {
+                            return { ...act, done: saved.actions[i].done };
+                        }
+                        return act;
+                    });
+                }
+
+                return {
+                    ...item,
+                    actions: mergedActions,
+                    result: saved ? saved.result : "",
+                    feeling: saved ? saved.feeling : "",
+                    pain: saved ? saved.pain : "",
+                    done: saved ? saved.done : false
+                };
+            });
+            render();
+        }
+
+        function changeWeek() {
+            currentWeek = parseInt(document.getElementById('week-selector').value);
+            render();
+        }
+
+        function render() {
+            const list = document.getElementById('schedule-list');
+            list.innerHTML = '';
+            const weekTasks = userPlan.filter(item => item.week === currentWeek);
+            const doneCount = weekTasks.filter(t => t.done).length;
+            
+            document.getElementById('progress-text').innerText = `${doneCount}/${weekTasks.length}`;
+            document.getElementById('progress-bar').style.width = `${(doneCount/weekTasks.length)*100}%`;
+
+            weekTasks.forEach((item) => {
+                const realIndex = userPlan.indexOf(item);
+                const statusClass = item.done ? 'bg-green-50 border-green-500 border-l-4' : 'bg-white border-l-4 border-indigo-200';
+                const icon = item.done ? '✅' : '⭕️';
+                const painBadge = item.pain ? `<span class="ml-2 text-xs px-2 py-0.5 rounded ${item.pain > 2 ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}">Pain:${item.pain}</span>` : '';
+                
+                const actionDone = item.actions.filter(a => a.done).length;
+                const actionTotal = item.actions.length;
+                const actionBadge = actionTotal > 0 ? `<span class="text-xs text-indigo-600 bg-indigo-50 px-1 rounded ml-1">Actions:${actionDone}/${actionTotal}</span>` : '';
+
+                const html = `
+                    <div onclick="openModal(${realIndex})" class="card cursor-pointer rounded-xl p-4 shadow-sm flex justify-between items-start mb-3 ${statusClass}">
+                        <div class="flex-1">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-bold text-gray-800 text-sm">${item.date}</span>
+                                ${painBadge}
+                            </div>
+                            <div class="font-bold text-gray-900 mb-1">${item.task}</div>
+                            <p class="text-xs text-gray-500 mb-2">💡 ${item.focus} ${actionBadge}</p>
+                            ${item.done ? `<div class="text-xs text-gray-700 mt-2 border-t border-gray-200 pt-2 bg-opacity-50">📝 ${item.result} <br>❤️ ${item.feeling}</div>` : ''}
+                        </div>
+                        <div class="ml-3 text-xl mt-1">${icon}</div>
+                    </div>
+                `;
+                list.innerHTML += html;
+            });
+        }
+
+        function openModal(index) {
+            currentIndex = index;
+            const item = userPlan[index];
+            document.getElementById('modal-title').innerText = item.task;
+            document.getElementById('input-result').value = item.result;
+            document.getElementById('input-feeling').value = item.feeling;
+            selectPain(item.pain || 0);
+            
+            const actionList = document.getElementById('action-list');
+            actionList.innerHTML = '';
+            if (item.actions && item.actions.length > 0) {
+                document.getElementById('action-section').classList.remove('hidden');
+                item.actions.forEach((action, i) => {
+                    const checkedClass = action.done ? 'checked' : 'bg-white border-gray-200';
+                    const checkIcon = action.done ? '✓' : '';
+                    const checkBg = action.done ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 bg-white';
+                    
+                    actionList.innerHTML += `
+                        <div onclick="toggleAction(${i})" class="action-item ${checkedClass} cursor-pointer border rounded-lg p-3 flex items-start transition-colors duration-200 select-none">
+                            <div class="check-box w-6 h-6 border rounded flex-shrink-0 flex items-center justify-center mr-3 mt-0.5 ${checkBg}">
+                                ${checkIcon}
+                            </div>
+                            <div>
+                                <div class="text-sm font-bold action-name">${action.name}</div>
+                                <div class="text-xs text-gray-500 mt-1 leading-tight">${action.desc}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                document.getElementById('action-section').classList.add('hidden');
+            }
+
+            document.getElementById('modal').classList.remove('hidden');
+        }
+
+        function toggleAction(actionIndex) {
+            const currentState = userPlan[currentIndex].actions[actionIndex].done;
+            userPlan[currentIndex].actions[actionIndex].done = !currentState;
+            openModal(currentIndex);
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.add('hidden');
+        }
+
+        function selectPain(level) {
+            document.getElementById('input-pain').value = level;
+            document.querySelectorAll('.pain-btn').forEach(btn => {
+                btn.classList.remove('bg-indigo-600', 'text-white', 'ring-2', 'ring-indigo-300');
+            });
+            if(level !== "") {
+                const btn = document.getElementById(`pain-btn-${level}`);
+                if(btn) btn.classList.add('bg-indigo-600', 'text-white', 'ring-2', 'ring-indigo-300');
+            }
+        }
+
+        function saveData() {
+            const result = document.getElementById('input-result').value;
+            const feeling = document.getElementById('input-feeling').value;
+            const pain = document.getElementById('input-pain').value;
+            const actionDone = userPlan[currentIndex].actions.some(a => a.done);
+
+            if(!result && !feeling && !actionDone) { alert("Please check an action or enter result."); return; }
+
+            userPlan[currentIndex].result = result;
+            userPlan[currentIndex].feeling = feeling;
+            userPlan[currentIndex].pain = pain;
+            userPlan[currentIndex].done = true;
+
+            localStorage.setItem('marathonPlan_patellar', JSON.stringify(userPlan));
+            render();
+            closeModal();
+        }
+
+
+        function generateReport() {
+            let report = `🛡️ Rehab Report (Week ${currentWeek})\n\n`;
+            const weekTasks = userPlan.filter(item => item.week === currentWeek && item.done);
+            
+            if(weekTasks.length === 0) { alert("No logs."); return; }
+
+            weekTasks.forEach(item => {
+                report += `📅 ${item.date}\n📝 ${item.result}\n❤️ ${item.feeling} (Pain:${item.pain})\n\n`;
+            });
+            navigator.clipboard.writeText(report).then(() => alert("Report Copied!"));
+        }
+
+        init();
+    </script>
+</body>
+</html>
