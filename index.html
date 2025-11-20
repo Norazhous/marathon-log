@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>马拉松训练日记 V3.2</title>
+    <title>Marathon Log V3.3 (Duck Feet Fix)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { background-color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
@@ -12,7 +12,6 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        /* 动作打卡样式优化 */
         .action-item { transition: all 0.2s; }
         .action-item.checked { background-color: #effdf5; border-color: #86efac; }
         .action-item.checked .check-box { background-color: #22c55e; border-color: #22c55e; }
@@ -23,28 +22,28 @@
 
     <div class="bg-blue-700 text-white p-4 sticky top-0 z-20 shadow-md">
         <div class="flex justify-between items-center mb-3">
-            <h1 class="text-lg font-bold">🏃‍♂️ 26周挑战 (力量版)</h1>
+            <h1 class="text-lg font-bold">🏃‍♂️ V3.3 (Duck Feet Fix)</h1>
             <div class="flex space-x-2">
                 <button onclick="generateReport()" class="bg-green-500 text-xs px-3 py-1.5 rounded shadow hover:bg-green-600 font-medium">
-                    📋 复制
+                    📋 Copy
                 </button>
                 <button onclick="backupToEmail()" class="bg-gray-100 text-blue-700 text-xs px-3 py-1.5 rounded shadow hover:bg-white font-bold flex items-center">
-                    📩 邮件备份
+                    📩 Email
                 </button>
             </div>
         </div>
         
         <select id="week-selector" onchange="changeWeek()" class="w-full p-2 text-black rounded-lg outline-none font-bold shadow-inner bg-blue-50">
-            <option value="1">第1周：基础与修复 (11/20-11/26)</option>
-            <option value="2">第2周：保持连贯性 (11/27-12/03)</option>
-            <option value="3">第3周：专注姿势 (12/04-12/10)</option>
-            <option value="4">第4周：减量休息 (12/11-12/17)</option>
+            <option value="1">Week 1: Base & Alignment (Nov 20-26)</option>
+            <option value="2">Week 2: Consistency (Nov 27-Dec 03)</option>
+            <option value="3">Week 3: Form Focus (Dec 04-10)</option>
+            <option value="4">Week 4: Recovery (Dec 11-17)</option>
         </select>
     </div>
 
     <div class="px-4 pt-4">
         <div class="flex justify-between text-xs text-gray-500 mb-1">
-            <span>本周进度</span>
+            <span>Weekly Progress</span>
             <span id="progress-text">0/7</span>
         </div>
         <div class="w-full bg-gray-200 rounded-full h-2.5">
@@ -58,30 +57,30 @@
     <div id="modal" class="fixed inset-0 bg-black bg-opacity-60 hidden flex items-end justify-center z-50 backdrop-blur-sm">
         <div class="bg-white w-full rounded-t-2xl p-6 h-5/6 overflow-y-auto animate-slide-up flex flex-col">
             <div class="flex justify-between items-center mb-4 flex-shrink-0">
-                <h2 class="text-xl font-bold text-blue-800" id="modal-title">编辑记录</h2>
+                <h2 class="text-xl font-bold text-blue-800" id="modal-title">Edit Record</h2>
                 <button onclick="closeModal()" class="text-gray-400 text-2xl">&times;</button>
             </div>
             
             <div class="space-y-5 flex-grow overflow-y-auto pb-20">
                 
                 <div id="action-section">
-                    <label class="block text-sm font-bold text-gray-700 mb-2">💪 今日动作 (点击查看要点并勾选)</label>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">💪 Corrective Actions (Tap to Check)</label>
                     <div id="action-list" class="space-y-2">
                         </div>
                 </div>
 
                 <div class="border-t pt-4">
-                    <label class="block text-sm font-bold text-gray-700 mb-1">✅ 跑步数据 / 实际完成</label>
-                    <input type="text" id="input-result" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" placeholder="例：5.02公里，35分钟">
+                    <label class="block text-sm font-bold text-gray-700 mb-1">✅ Result (Dist/Time)</label>
+                    <input type="text" id="input-result" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" placeholder="e.g., 5.02km, 35min">
                 </div>
 
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">🦵 身体感受 (膝盖/髂胫束)</label>
-                    <textarea id="input-feeling" rows="2" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" placeholder="膝盖内侧感觉如何？"></textarea>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">🦵 Knee Feeling (Medial/Twist)</label>
+                    <textarea id="input-feeling" rows="2" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Any twisting pain?"></textarea>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">📉 痛感打分 (0-10)</label>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">📉 Pain Level (0-10)</label>
                     <div class="flex space-x-2 overflow-x-auto py-2 no-scrollbar">
                         <script>
                             for(let i=0; i<=10; i++) {
@@ -95,98 +94,98 @@
                 <div class="h-10"></div> </div>
 
             <div class="absolute bottom-0 left-0 w-full p-4 bg-white border-t border-gray-100">
-                <button onclick="saveData()" class="w-full bg-blue-600 active:bg-blue-700 text-white py-3 rounded-xl font-bold text-lg shadow-lg">保存打卡</button>
+                <button onclick="saveData()" class="w-full bg-blue-600 active:bg-blue-700 text-white py-3 rounded-xl font-bold text-lg shadow-lg">Save Record</button>
             </div>
         </div>
     </div>
 
     <script>
-        // ================= 数据定义 (每周3练版 V3.2) =================
+        // ================= DATA DEFINITION (V3.3 - Duck Feet/Out-toeing Fix) =================
         const masterPlan = [
-            // 第1周
+            // Week 1
             { 
-                week: 1, date: "11/20 (周四)", task: "轻松跑 5公里", focus: "跑铁轨 (双脚分宽)", 
+                week: 1, date: "Nov 20 (Thu)", task: "Easy Run 5km", focus: "Knee follows Toes", 
                 actions: [
-                    {name: "跑铁轨姿势确认", desc: "双脚间距10cm，拒绝猫步", done: false},
-                    {name: "跑后拉伸 (蝴蝶式)", desc: "背挺直，膝盖向下压，30秒", done: false},
-                    {name: "睡前 VMO 激活 (10次)", desc: "坐姿伸直腿用力收缩内侧头", done: false}
+                    {name: "Alignment Check", desc: "If feet turn out, knee MUST bend out too. Don't buckle in.", done: false},
+                    {name: "Figure-4 Stretch", desc: "Release Piriformis (Tight glutes cause duck feet)", done: false},
+                    {name: "VMO Activation", desc: "10x each leg, squeeze medial quad", done: false}
                 ] 
             },
             { 
-                week: 1, date: "11/21 (周五)", task: "力量训练 (上肢/核心)", focus: "核心激活 (不累腿)", 
+                week: 1, date: "Nov 21 (Fri)", task: "Strength (Core/Upper)", focus: "Stability", 
                 actions: [
-                    {name: "平板支撑 (3组x45秒)", desc: "收紧核心，不塌腰", done: false},
-                    {name: "死虫式 (3组x15次)", desc: "腰贴地，动作缓慢", done: false},
-                    {name: "俯卧撑 (3组)", desc: "增强摆臂力量", done: false},
-                    {name: "蝴蝶式拉伸", desc: "放松内侧，准备明日长跑", done: false}
+                    {name: "Plank (3 x 45s)", desc: "Tight core", done: false},
+                    {name: "Dead Bugs (3 x 15)", desc: "Flat back", done: false},
+                    {name: "Push-ups (3 sets)", desc: "Arm power", done: false},
+                    {name: "Figure-4 Stretch", desc: "Deep glute stretch, 2 min each side", done: false}
                 ]
             },
             { 
-                week: 1, date: "11/22 (周六)", task: "长距离跑 8公里", focus: "跑4走1 | 防内扣", 
+                week: 1, date: "Nov 22 (Sat)", task: "Long Run 8km", focus: "Run 4 / Walk 1", 
                 actions: [
-                    {name: "严格跑4走1", desc: "到点就走，不要逞强", done: false},
-                    {name: "膝盖对准第二脚趾", desc: "落地瞬间膝盖不内扣", done: false},
-                    {name: "跑后全套拉伸", desc: "臀部、大腿前后侧、内侧", done: false}
+                    {name: "Strict Run/Walk", desc: "Preserve the knees", done: false},
+                    {name: "Watch Landing", desc: "Don't let arch collapse inward (Over-pronation)", done: false},
+                    {name: "Post-Run Stretch", desc: "Figure-4 + Butterfly + Hamstrings", done: false}
                 ]
             },
             { 
-                week: 1, date: "11/23 (周日)", task: "快走 + 力量 (VMO/稳定)", focus: "有氧 + 膝盖稳定性", 
+                week: 1, date: "Nov 23 (Sun)", task: "Power Walk + Strength", focus: "Anti-Rotation", 
                 actions: [
-                    {name: "快走 45分钟", desc: "保持有氧心率", done: false},
-                    {name: "靠墙夹球静蹲 (3组x45秒)", desc: "用力夹球，激活内侧头", done: false},
-                    {name: "单腿硬拉 (3组x10次)", desc: "徒手做，练平衡和腘绳肌", done: false},
-                    {name: "侧卧抬腿 (3组x15次)", desc: "激活臀中肌", done: false}
+                    {name: "Power Walk 45min", desc: "Focus on pushing off big toe", done: false},
+                    {name: "Wall Sit w/ Ball (3x45s)", desc: "Crucial for VMO / Medial Knee", done: false},
+                    {name: "Clamshells (3x15)", desc: "Strengthen Glute Med to fight internal rotation", done: false}
                 ]
             },
             { 
-                week: 1, date: "11/24 (周一)", task: "休息", focus: "彻底放松", 
+                week: 1, date: "Nov 24 (Mon)", task: "Rest Day", focus: "Recovery", 
                 actions: [
-                    {name: "充足睡眠", desc: "8小时+", done: false}
+                    {name: "Sleep 8hr+", desc: "Muscle repair", done: false},
+                    {name: "Figure-4 Stretch", desc: "Loosen hips while watching TV", done: false}
                 ]
             },
             { 
-                week: 1, date: "11/25 (周二)", task: "轻松跑 5公里", focus: "落地轻盈", 
+                week: 1, date: "Nov 25 (Tue)", task: "Easy Run 5km", focus: "Wide Stance", 
                 actions: [
-                    {name: "跑步 5km", desc: "核心收紧", done: false},
-                    {name: "VMO 激活", desc: "日常保养", done: false}
+                    {name: "Run 5km", desc: "Feet 10cm apart (Railroad)", done: false},
+                    {name: "VMO Activation", desc: "Bedtime routine", done: false}
                 ]
             },
             { 
-                week: 1, date: "11/26 (周三)", task: "力量训练 (重训/臀部)", focus: "臀部轰炸", 
+                week: 1, date: "Nov 26 (Wed)", task: "Strength (Legs/Glutes)", focus: "Hip Control", 
                 actions: [
-                    {name: "蚌式开合 (4组x15次)", desc: "一定要做！防内扣神器", done: false},
-                    {name: "深蹲/自重深蹲 (3组x15次)", desc: "膝盖不内扣，屁股向后坐", done: false},
-                    {name: "臀桥 (3组x15次)", desc: "顶峰收缩臀部2秒", done: false},
-                    {name: "直腿内收 (3组x15次)", desc: "强化大腿内侧", done: false}
+                    {name: "Clamshells (4 x 15)", desc: "Top Priority exercise", done: false},
+                    {name: "Squats (3 x 15)", desc: "Watch your knees! Push them OUT over toes", done: false},
+                    {name: "Glute Bridge (3 x 15)", desc: "Squeeze butt hard", done: false},
+                    {name: "Figure-4 Stretch", desc: "End the session with this", done: false}
                 ]
             },
             
-            // 第2周
-            { week: 2, date: "11/27 (周四)", task: "轻松跑 6公里", focus: "维持双脚宽度", actions: [{name: "跑步 6km", desc: "跑铁轨", done: false}, {name: "VMO 激活", desc: "每侧10次", done: false}] },
-            { week: 2, date: "11/28 (周五)", task: "力量训练 (上肢/核心)", focus: "核心稳则膝盖稳", actions: [{name: "平板支撑", desc: "增加至60秒", done: false}, {name: "侧支撑", desc: "每侧30秒", done: false}, {name: "拉伸", desc: "放松全身", done: false}] },
-            { week: 2, date: "11/29 (周六)", task: "长距离跑 9公里", focus: "跑4走1", actions: [{name: "跑9km", desc: "关注内侧感受", done: false}, {name: "跑后拉伸", desc: "全套", done: false}] },
-            { week: 2, date: "11/30 (周日)", task: "快走 + 力量 (VMO)", focus: "强化内侧", actions: [{name: "快走45min", desc: "", done: false}, {name: "靠墙夹球静蹲", desc: "3组x60秒", done: false}, {name: "箭步蹲", desc: "注意膝盖不内扣", done: false}] },
-            { week: 2, date: "12/01 (周一)", task: "休息", focus: "恢复", actions: [{name: "休息", desc: "", done: false}] },
-            { week: 2, date: "12/02 (周二)", task: "轻松跑 5公里", focus: "步频180", actions: [{name: "跑步 5km", desc: "小步快跑", done: false}, {name: "VMO 激活", desc: "", done: false}] },
-            { week: 2, date: "12/03 (周三)", task: "力量训练 (重训/臀部)", focus: "增加强度", actions: [{name: "蚌式开合", desc: "增加弹力带", done: false}, {name: "保加利亚蹲", desc: "如果膝盖痛就换回普通深蹲", done: false}] },
+            // Week 2
+            { week: 2, date: "Nov 27 (Thu)", task: "Easy Run 6km", focus: "Knee Tracking", actions: [{name: "Run 6km", desc: "Knee over 2nd toe", done: false}, {name: "VMO Activation", desc: "", done: false}] },
+            { week: 2, date: "Nov 28 (Fri)", task: "Strength (Core)", focus: "Core", actions: [{name: "Plank", desc: "60s", done: false}, {name: "Figure-4 Stretch", desc: "Daily habit", done: false}] },
+            { week: 2, date: "Nov 29 (Sat)", task: "Long Run 9km", focus: "Run 4 / Walk 1", actions: [{name: "Run 9km", desc: "Monitor medial pain", done: false}, {name: "Full Stretch", desc: "", done: false}] },
+            { week: 2, date: "Nov 30 (Sun)", task: "Power Walk + VMO", focus: "Alignment", actions: [{name: "Walk 45min", desc: "", done: false}, {name: "Wall Sit w/ Ball", desc: "3x60s", done: false}] },
+            { week: 2, date: "Dec 01 (Mon)", task: "Rest Day", focus: "Rest", actions: [{name: "Rest", desc: "", done: false}] },
+            { week: 2, date: "Dec 02 (Tue)", task: "Easy Run 5km", focus: "Light Feet", actions: [{name: "Run 5km", desc: "Soft landing", done: false}, {name: "VMO Activation", desc: "", done: false}] },
+            { week: 2, date: "Dec 03 (Wed)", task: "Strength (Legs)", focus: "Glutes", actions: [{name: "Clamshells", desc: "Add band", done: false}, {name: "Squats", desc: "Knees OUT", done: false}] },
 
-             // 第3周
-            { week: 3, date: "12/04 (周四)", task: "轻松跑 6公里", focus: "呼吸", actions: [{name: "跑步 6km", desc: "", done: false}] },
-            { week: 3, date: "12/05 (周五)", task: "力量训练 (上肢/核心)", focus: "核心", actions: [{name: "死虫式", desc: "进阶版", done: false}, {name: "拉伸", desc: "", done: false}] },
-            { week: 3, date: "12/06 (周六)", task: "长距离跑 10公里", focus: "突破双位数", actions: [{name: "跑10km", desc: "跑4走1", done: false}] },
-            { week: 3, date: "12/07 (周日)", task: "快走 + 力量 (VMO)", focus: "稳定", actions: [{name: "快走50min", desc: "", done: false}, {name: "靠墙夹球", desc: "坚持", done: false}] },
-            { week: 3, date: "12/08 (周一)", task: "休息", focus: "恢复", actions: [{name: "休息", desc: "", done: false}] },
-            { week: 3, date: "12/09 (周二)", task: "轻松跑 6公里", focus: "放松", actions: [{name: "跑步 6km", desc: "", done: false}] },
-            { week: 3, date: "12/10 (周三)", task: "力量训练 (重训)", focus: "腿部", actions: [{name: "全套腿部动作", desc: "", done: false}] },
+             // Week 3
+            { week: 3, date: "Dec 04 (Thu)", task: "Easy Run 6km", focus: "Breathing", actions: [{name: "Run 6km", desc: "", done: false}] },
+            { week: 3, date: "Dec 05 (Fri)", task: "Strength (Core)", focus: "Stability", actions: [{name: "Dead Bugs", desc: "", done: false}, {name: "Stretch", desc: "Figure-4", done: false}] },
+            { week: 3, date: "Dec 06 (Sat)", task: "Long Run 10km", focus: "Endurance", actions: [{name: "Run 10km", desc: "Double digits!", done: false}] },
+            { week: 3, date: "Dec 07 (Sun)", task: "Walk + VMO", focus: "Health", actions: [{name: "Walk 50min", desc: "", done: false}, {name: "Wall Sit", desc: "", done: false}] },
+            { week: 3, date: "Dec 08 (Mon)", task: "Rest Day", focus: "Recovery", actions: [{name: "Rest", desc: "", done: false}] },
+            { week: 3, date: "Dec 09 (Tue)", task: "Easy Run 6km", focus: "Relax", actions: [{name: "Run 6km", desc: "", done: false}] },
+            { week: 3, date: "Dec 10 (Wed)", task: "Strength (Legs)", focus: "Power", actions: [{name: "Leg Routine", desc: "", done: false}] },
 
-            // 第4周 (减量周 - 力量训练减半)
-            { week: 4, date: "12/11 (周四)", task: "轻松跑 5公里", focus: "轻松", actions: [{name: "跑步 5km", desc: "", done: false}] },
-            { week: 4, date: "12/12 (周五)", task: "休息 (取消力量)", focus: "多睡觉", actions: [{name: "拉伸放松", desc: "只做拉伸不做力量", done: false}] },
-            { week: 4, date: "12/13 (周六)", task: "长距离跑 8公里", focus: "减量", actions: [{name: "跑8km", desc: "", done: false}] },
-            { week: 4, date: "12/14 (周日)", task: "快走 30分", focus: "放松", actions: [{name: "快走30min", desc: "", done: false}] },
-            { week: 4, date: "12/15 (周一)", task: "休息", focus: "恢复", actions: [{name: "休息", desc: "", done: false}] },
-            { week: 4, date: "12/16 (周二)", task: "轻松跑 4公里", focus: "状态", actions: [{name: "跑步 4km", desc: "", done: false}] },
-            { week: 4, date: "12/17 (周三)", task: "力量训练 (轻)", focus: "自重", actions: [{name: "轻量深蹲", desc: "", done: false}, {name: "轻量蚌式", desc: "", done: false}] },
+            // Week 4
+            { week: 4, date: "Dec 11 (Thu)", task: "Easy Run 5km", focus: "Easy", actions: [{name: "Run 5km", desc: "", done: false}] },
+            { week: 4, date: "Dec 12 (Fri)", task: "Rest", focus: "Sleep", actions: [{name: "Stretch", desc: "No strength today", done: false}] },
+            { week: 4, date: "Dec 13 (Sat)", task: "Long Run 8km", focus: "Cutback", actions: [{name: "Run 8km", desc: "Recharge", done: false}] },
+            { week: 4, date: "Dec 14 (Sun)", task: "Walk 30min", focus: "Relax", actions: [{name: "Walk", desc: "", done: false}] },
+            { week: 4, date: "Dec 15 (Mon)", task: "Rest", focus: "Recovery", actions: [{name: "Rest", desc: "", done: false}] },
+            { week: 4, date: "Dec 16 (Tue)", task: "Easy Run 4km", focus: "Check", actions: [{name: "Run 4km", desc: "", done: false}] },
+            { week: 4, date: "Dec 17 (Wed)", task: "Strength (Light)", focus: "Mobility", actions: [{name: "Air Squats", desc: "", done: false}, {name: "Clamshells", desc: "Bodyweight", done: false}] },
         ];
 
         let userPlan = [];
@@ -195,20 +194,15 @@
 
         function init() {
             const storedData = JSON.parse(localStorage.getItem('marathonPlan_v3')) || [];
-            
             userPlan = masterPlan.map((item, index) => {
                 const saved = storedData[index];
                 let mergedActions = item.actions.map(act => ({ ...act }));
-
                 if (saved && saved.actions) {
                     mergedActions = item.actions.map((act, i) => {
-                        if (saved.actions[i] && saved.actions[i].name === act.name) {
-                            return { ...act, done: saved.actions[i].done };
-                        }
+                        if (saved.actions[i]) return { ...act, done: saved.actions[i].done };
                         return act;
                     });
                 }
-
                 return {
                     ...item,
                     actions: mergedActions,
@@ -239,17 +233,17 @@
                 const realIndex = userPlan.indexOf(item);
                 const statusClass = item.done ? 'bg-green-50 border-green-500 border-l-4' : 'bg-white border-l-4 border-blue-200';
                 const icon = item.done ? '✅' : '⭕️';
-                const painBadge = item.pain ? `<span class="ml-2 text-xs px-2 py-0.5 rounded ${item.pain > 2 ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}">痛感:${item.pain}</span>` : '';
+                const painBadge = item.pain ? `<span class="ml-2 text-xs px-2 py-0.5 rounded ${item.pain > 2 ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}">Pain:${item.pain}</span>` : '';
                 
                 const actionDone = item.actions.filter(a => a.done).length;
                 const actionTotal = item.actions.length;
-                const actionBadge = actionTotal > 0 ? `<span class="text-xs text-blue-600 bg-blue-50 px-1 rounded ml-1">动作:${actionDone}/${actionTotal}</span>` : '';
+                const actionBadge = actionTotal > 0 ? `<span class="text-xs text-blue-600 bg-blue-50 px-1 rounded ml-1">Actions:${actionDone}/${actionTotal}</span>` : '';
 
                 const html = `
                     <div onclick="openModal(${realIndex})" class="card cursor-pointer rounded-xl p-4 shadow-sm flex justify-between items-start mb-3 ${statusClass}">
                         <div class="flex-1">
                             <div class="flex justify-between items-center mb-1">
-                                <span class="font-bold text-gray-800 text-sm">${item.date.split(' ')[0]} <span class="font-normal text-gray-500">${item.date.split(' ')[1]}</span></span>
+                                <span class="font-bold text-gray-800 text-sm">${item.date}</span>
                                 ${painBadge}
                             </div>
                             <div class="font-bold text-gray-900 mb-1">${item.task}</div>
@@ -326,7 +320,7 @@
             const pain = document.getElementById('input-pain').value;
             const actionDone = userPlan[currentIndex].actions.some(a => a.done);
 
-            if(!result && !feeling && !actionDone) { alert("请至少勾选一个动作或填写内容"); return; }
+            if(!result && !feeling && !actionDone) { alert("Check an action or enter result."); return; }
 
             userPlan[currentIndex].result = result;
             userPlan[currentIndex].feeling = feeling;
@@ -340,49 +334,28 @@
 
         function backupToEmail() {
             const weekTasks = userPlan.filter(item => item.week === currentWeek && item.done);
-            
-            if(weekTasks.length === 0) {
-                alert("⚠️ 本周还没有打卡记录，先记录一条再备份吧！");
-                return;
-            }
-
-            const subject = `🏃‍♂️ 训练日记备份：第 ${currentWeek} 周`;
-            let body = `📅 第 ${currentWeek} 周训练总结\n\n`;
-            
+            if(weekTasks.length === 0) { alert("No logs available."); return; }
+            const subject = `🏃‍♂️ Duck Feet Fix: Week ${currentWeek}`;
+            let body = `Week ${currentWeek} Report\n\n`;
             weekTasks.forEach(item => {
                 body += `【${item.date}】 ${item.task}\n`;
-                if(item.actions && item.actions.length > 0) {
-                    const doneActions = item.actions.filter(a => a.done).map(a => `☑️ ${a.name}`).join('\n');
-                    if(doneActions) {
-                        body += `💪 已完成动作:\n${doneActions}\n`;
-                    }
+                if(item.actions) {
+                    const dones = item.actions.filter(a => a.done).map(a => `☑️ ${a.name}`).join('\n');
+                    if(dones) body += `${dones}\n`;
                 }
-                body += `✅ 结果: ${item.result}\n`;
-                body += `❤️ 感受: ${item.feeling} (痛感: ${item.pain}/10)\n`;
-                body += `------------------------------\n`;
+                body += `Result: ${item.result}\nFeeling: ${item.feeling} (Pain: ${item.pain})\n\n`;
             });
-
             window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
         }
 
         function generateReport() {
-            let report = `🏃‍♂️ 训练汇报 (第${currentWeek}周)\n\n`;
+            let report = `🏃‍♂️ Report (Week ${currentWeek})\n\n`;
             const weekTasks = userPlan.filter(item => item.week === currentWeek && item.done);
-            
-            if(weekTasks.length === 0) { alert("本周无记录"); return; }
-
+            if(weekTasks.length === 0) { alert("No logs."); return; }
             weekTasks.forEach(item => {
-                report += `📅 ${item.date}\n`;
-                if(item.actions) {
-                    const dones = item.actions.filter(a => a.done).map(a=>a.name);
-                    if(dones.length) report += `💪 完成: ${dones.join(', ')}\n`;
-                }
-                report += `📝 ${item.result}\n❤️ ${item.feeling} (痛:${item.pain})\n\n`;
+                report += `📅 ${item.date}\n📝 ${item.result}\n❤️ ${item.feeling} (Pain:${item.pain})\n\n`;
             });
-            
-            navigator.clipboard.writeText(report).then(() => {
-                alert("已复制汇报内容！");
-            });
+            navigator.clipboard.writeText(report).then(() => alert("Copied!"));
         }
 
         init();
