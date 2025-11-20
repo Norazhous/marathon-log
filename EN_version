@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marathon Training Log V3.2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+        .card { transition: all 0.2s; }
+        .card:active { transform: scale(0.98); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Action Item Styles */
+        .action-item { transition: all 0.2s; }
+        .action-item.checked { background-color: #effdf5; border-color: #86efac; }
+        .action-item.checked .check-box { background-color: #22c55e; border-color: #22c55e; }
+        .action-item.checked .action-name { color: #166534; text-decoration: line-through; opacity: 0.8; }
+    </style>
+</head>
+<body class="pb-24">
+
+    <div class="bg-blue-700 text-white p-4 sticky top-0 z-20 shadow-md">
+        <div class="flex justify-between items-center mb-3">
+            <h1 class="text-lg font-bold">🏃‍♂️ 26-Week Challenge</h1>
+            <div class="flex space-x-2">
+                <button onclick="generateReport()" class="bg-green-500 text-xs px-3 py-1.5 rounded shadow hover:bg-green-600 font-medium">
+                    📋 Copy
+                </button>
+                <button onclick="backupToEmail()" class="bg-gray-100 text-blue-700 text-xs px-3 py-1.5 rounded shadow hover:bg-white font-bold flex items-center">
+                    📩 Email
+                </button>
+            </div>
+        </div>
+        
+        <select id="week-selector" onchange="changeWeek()" class="w-full p-2 text-black rounded-lg outline-none font-bold shadow-inner bg-blue-50">
+            <option value="1">Week 1: Base & Rehab (Nov 20-26)</option>
+            <option value="2">Week 2: Consistency (Nov 27-Dec 03)</option>
+            <option value="3">Week 3: Form Focus (Dec 04-10)</option>
+            <option value="4">Week 4: Recovery (Dec 11-17)</option>
+        </select>
+    </div>
+
+    <div class="px-4 pt-4">
+        <div class="flex justify-between text-xs text-gray-500 mb-1">
+            <span>Weekly Progress</span>
+            <span id="progress-text">0/7</span>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-2.5">
+            <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+        </div>
+    </div>
+
+    <div id="schedule-list" class="p-4 space-y-3">
+        </div>
+
+    <div id="modal" class="fixed inset-0 bg-black bg-opacity-60 hidden flex items-end justify-center z-50 backdrop-blur-sm">
+        <div class="bg-white w-full rounded-t-2xl p-6 h-5/6 overflow-y-auto animate-slide-up flex flex-col">
+            <div class="flex justify-between items-center mb-4 flex-shrink-0">
+                <h2 class="text-xl font-bold text-blue-800" id="modal-title">Edit Record</h2>
+                <button onclick="closeModal()" class="text-gray-400 text-2xl">&times;</button>
+            </div>
+            
+            <div class="space-y-5 flex-grow overflow-y-auto pb-20">
+                
+                <div id="action-section">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">💪 Daily Actions (Tap to Check)</label>
+                    <div id="action-list" class="space-y-2">
+                        </div>
+                </div>
+
+                <div class="border-t pt-4">
+                    <label class="block text-sm font-bold text-gray-700 mb-1">✅ Result (Dist/Time)</label>
+                    <input type="text" id="input-result" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" placeholder="e.g., 5.02km, 35min">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">🦵 Feeling (Knee/IT Band)</label>
+                    <textarea id="input-feeling" rows="2" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Any pain in medial knee?"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">📉 Pain Level (0-10)</label>
+                    <div class="flex space-x-2 overflow-x-auto py-2 no-scrollbar">
+                        <script>
+                            for(let i=0; i<=10; i++) {
+                                document.write(`<div onclick="selectPain(${i})" id="pain-btn-${i}" class="pain-btn flex-shrink-0 w-10 h-10 rounded-full border flex items-center justify-center cursor-pointer font-bold ${i>=3 ? 'border-red-200 text-red-600' : 'border-green-200 text-green-600'}">${i}</div>`);
+                            }
+                        </script>
+                    </div>
+                    <input type="hidden" id="input-pain">
+                </div>
+                
+                <div class="h-10"></div> </div>
+
+            <div class="absolute bottom-0 left-0 w-full p-4 bg-white border-t border-gray-100">
+                <button onclick="saveData()" class="w-full bg-blue-600 active:bg-blue-700 text-white py-3 rounded-xl font-bold text-lg shadow-lg">Save Record</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ================= DATA DEFINITION (English V3.2 - 3x Strength) =================
+        const masterPlan = [
+            // Week 1
+            { 
+                week: 1, date: "Nov 20 (Thu)", task: "Easy Run 5km", focus: "Run on Tracks (Wide Stance)", 
+                actions: [
+                    {name: "Check Stance Width", desc: "Feet 10cm apart, avoid crossover gait", done: false},
+                    {name: "Post-Run Stretch", desc: "Butterfly stretch for adductors, 30s", done: false},
+                    {name: "VMO Activation (10x)", desc: "Bedtime: Quad Sets, squeeze VMO hard", done: false}
+                ] 
+            },
+            { 
+                week: 1, date: "Nov 21 (Fri)", task: "Strength (Core/Upper)", focus: "Core Activation (Save Legs)", 
+                actions: [
+                    {name: "Plank (3 x 45s)", desc: "Tight core, straight back", done: false},
+                    {name: "Dead Bugs (3 x 15)", desc: "Slow control, lower back flat", done: false},
+                    {name: "Push-ups (3 sets)", desc: "For arm swing power", done: false},
+                    {name: "Butterfly Stretch", desc: "Relax medial thigh", done: false}
+                ]
+            },
+            { 
+                week: 1, date: "Nov 22 (Sat)", task: "Long Run 8km", focus: "Run 4min / Walk 1min", 
+                actions: [
+                    {name: "Strict Run/Walk", desc: "Walk before you are tired", done: false},
+                    {name: "Knee Alignment", desc: "Knees track over 2nd toe, no caving in", done: false},
+                    {name: "Full Leg Stretch", desc: "Glutes, Quads, Hamstrings, Adductors", done: false}
+                ]
+            },
+            { 
+                week: 1, date: "Nov 23 (Sun)", task: "Power Walk + Strength", focus: "Aerobic + Knee Stability", 
+                actions: [
+                    {name: "Power Walk 45min", desc: "Fast pace, arm swing", done: false},
+                    {name: "Wall Sit w/ Ball (3x45s)", desc: "Squeeze ball hard! Activate VMO", done: false},
+                    {name: "Single Leg RDL (3x10)", desc: "Balance & Hamstring", done: false},
+                    {name: "Side Leg Raise (3x15)", desc: "Glute Medius activation", done: false}
+                ]
+            },
+            { 
+                week: 1, date: "Nov 24 (Mon)", task: "Rest Day", focus: "Deep Recovery", 
+                actions: [
+                    {name: "Sleep 8hr+", desc: "Growth hormone release", done: false}
+                ]
+            },
+            { 
+                week: 1, date: "Nov 25 (Tue)", task: "Easy Run 5km", focus: "Light Landing", 
+                actions: [
+                    {name: "Run 5km", desc: "Engage core", done: false},
+                    {name: "VMO Activation", desc: "Daily maintenance", done: false}
+                ]
+            },
+            { 
+                week: 1, date: "Nov 26 (Wed)", task: "Strength (Legs/Glutes)", focus: "Heavy Glute Focus", 
+                actions: [
+                    {name: "Clamshells (4 x 15)", desc: "Essential for anti-valgus", done: false},
+                    {name: "Squats (3 x 15)", desc: "Knees out, sit back", done: false},
+                    {name: "Glute Bridge (3 x 15)", desc: "Squeeze glutes at top", done: false},
+                    {name: "Adductor Raise (3 x 15)", desc: "Side lying, lift bottom leg", done: false}
+                ]
+            },
+            
+            // Week 2
+            { week: 2, date: "Nov 27 (Thu)", task: "Easy Run 6km", focus: "Maintain Stance Width", actions: [{name: "Run 6km", desc: "Run on tracks", done: false}, {name: "VMO Activation", desc: "10 reps/side", done: false}] },
+            { week: 2, date: "Nov 28 (Fri)", task: "Strength (Core/Upper)", focus: "Stability", actions: [{name: "Plank", desc: "Increase to 60s", done: false}, {name: "Side Plank", desc: "30s each side", done: false}, {name: "Stretch", desc: "Full body", done: false}] },
+            { week: 2, date: "Nov 29 (Sat)", task: "Long Run 9km", focus: "Run 4 / Walk 1", actions: [{name: "Run 9km", desc: "Monitor medial knee", done: false}, {name: "Post-Run Stretch", desc: "Essential", done: false}] },
+            { week: 2, date: "Nov 30 (Sun)", task: "Power Walk + VMO", focus: "Inner Knee Strength", actions: [{name: "Power Walk 45min", desc: "", done: false}, {name: "Wall Sit w/ Ball", desc: "3x60s", done: false}, {name: "Lunges", desc: "Watch knee alignment", done: false}] },
+            { week: 2, date: "Dec 01 (Mon)", task: "Rest Day", focus: "Recovery", actions: [{name: "Rest", desc: "", done: false}] },
+            { week: 2, date: "Dec 02 (Tue)", task: "Easy Run 5km", focus: "Cadence 180", actions: [{name: "Run 5km", desc: "Short quick steps", done: false}, {name: "VMO Activation", desc: "", done: false}] },
+            { week: 2, date: "Dec 03 (Wed)", task: "Strength (Legs)", focus: "Progression", actions: [{name: "Clamshells", desc: "Add resistance band", done: false}, {name: "Bulgarian Split Squat", desc: "Or regular squats if pain", done: false}] },
+
+             // Week 3
+            { week: 3, date: "Dec 04 (Thu)", task: "Easy Run 6km", focus: "Breathing", actions: [{name: "Run 6km", desc: "Rhythmic breathing", done: false}] },
+            { week: 3, date: "Dec 05 (Fri)", task: "Strength (Core)", focus: "Core", actions: [{name: "Dead Bugs", desc: "Advanced variation", done: false}, {name: "Stretch", desc: "", done: false}] },
+            { week: 3, date: "Dec 06 (Sat)", task: "Long Run 10km", focus: "Double Digits!", actions: [{name: "Run 10km", desc: "Run 4 / Walk 1", done: false}] },
+            { week: 3, date: "Dec 07 (Sun)", task: "Power Walk + VMO", focus: "Stability", actions: [{name: "Walk 50min", desc: "", done: false}, {name: "Wall Sit w/ Ball", desc: "Keep it up", done: false}] },
+            { week: 3, date: "Dec 08 (Mon)", task: "Rest Day", focus: "Recovery", actions: [{name: "Rest", desc: "", done: false}] },
+            { week: 3, date: "Dec 09 (Tue)", task: "Easy Run 6km", focus: "Relax Shoulders", actions: [{name: "Run 6km", desc: "", done: false}] },
+            { week: 3, date: "Dec 10 (Wed)", task: "Strength (Legs)", focus: "Full Leg Day", actions: [{name: "Full Leg Routine", desc: "", done: false}] },
+
+            // Week 4 (Recovery Week)
+            { week: 4, date: "Dec 11 (Thu)", task: "Easy Run 5km", focus: "Very Easy", actions: [{name: "Run 5km", desc: "Recovery pace", done: false}] },
+            { week: 4, date: "Dec 12 (Fri)", task: "Rest (No Strength)", focus: "Sleep", actions: [{name: "Stretch Only", desc: "Skip strength training", done: false}] },
+            { week: 4, date: "Dec 13 (Sat)", task: "Long Run 8km", focus: "Cutback Week", actions: [{name: "Run 8km", desc: "Recharge body", done: false}] },
+            { week: 4, date: "Dec 14 (Sun)", task: "Power Walk 30min", focus: "Relax", actions: [{name: "Walk 30min", desc: "Light activity", done: false}] },
+            { week: 4, date: "Dec 15 (Mon)", task: "Rest Day", focus: "Recovery", actions: [{name: "Rest", desc: "", done: false}] },
+            { week: 4, date: "Dec 16 (Tue)", task: "Easy Run 4km", focus: "Check Status", actions: [{name: "Run 4km", desc: "", done: false}] },
+            { week: 4, date: "Dec 17 (Wed)", task: "Strength (Light)", focus: "Bodyweight", actions: [{name: "Air Squats", desc
