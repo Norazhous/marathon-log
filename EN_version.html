@@ -28,9 +28,6 @@
                 <button onclick="generateReport()" class="bg-green-500 text-xs px-3 py-1.5 rounded shadow hover:bg-green-600 font-medium">
                     📋 Copy
                 </button>
-                <button onclick="backupToEmail()" class="bg-gray-100 text-blue-700 text-xs px-3 py-1.5 rounded shadow hover:bg-white font-bold flex items-center">
-                    📩 Email
-                </button>
             </div>
         </div>
         
@@ -186,4 +183,182 @@
             { week: 4, date: "Dec 14 (Sun)", task: "Power Walk 30min", focus: "Relax", actions: [{name: "Walk 30min", desc: "Light activity", done: false}] },
             { week: 4, date: "Dec 15 (Mon)", task: "Rest Day", focus: "Recovery", actions: [{name: "Rest", desc: "", done: false}] },
             { week: 4, date: "Dec 16 (Tue)", task: "Easy Run 4km", focus: "Check Status", actions: [{name: "Run 4km", desc: "", done: false}] },
-            { week: 4, date: "Dec 17 (Wed)", task: "Strength (Light)", focus: "Bodyweight", actions: [{name: "Air Squats", desc
+            { week: 4, date: "Dec 17 (Wed)", task: "Strength (Light)", focus: "Bodyweight", actions: [{name: "Air Squats", desc: "No weights", done: false}, {name: "Clamshells", desc: "No band", done: false}] },
+        ];
+
+        let userPlan = [];
+        let currentWeek = 1;
+        let currentIndex = null;
+
+        function init() {
+            // Load from the same local storage key so data persists across language versions
+            const storedData = JSON.parse(localStorage.getItem('marathonPlan_v3')) || [];
+            
+            userPlan = masterPlan.map((item, index) => {
+                const saved = storedData[index];
+                let mergedActions = item.actions.map(act => ({ ...act }));
+
+                if (saved && saved.actions) {
+                    // Try to merge actions status (matching by index as names changed to English)
+                    mergedActions = item.actions.map((act, i) => {
+                        if (saved.actions[i]) {
+                            return { ...act, done: saved.actions[i].done };
+                        }
+                        return act;
+                    });
+                }
+
+                return {
+                    ...item,
+                    actions: mergedActions,
+                    result: saved ? saved.result : "",
+                    feeling: saved ? saved.feeling : "",
+                    pain: saved ? saved.pain : "",
+                    done: saved ? saved.done : false
+                };
+            });
+            render();
+        }
+
+        function changeWeek() {
+            currentWeek = parseInt(document.getElementById('week-selector').value);
+            render();
+        }
+
+        function render() {
+            const list = document.getElementById('schedule-list');
+            list.innerHTML = '';
+            const weekTasks = userPlan.filter(item => item.week === currentWeek);
+            const doneCount = weekTasks.filter(t => t.done).length;
+            
+            document.getElementById('progress-text').innerText = `${doneCount}/${weekTasks.length}`;
+            document.getElementById('progress-bar').style.width = `${(doneCount/weekTasks.length)*100}%`;
+
+            weekTasks.forEach((item) => {
+                const realIndex = userPlan.indexOf(item);
+                const statusClass = item.done ? 'bg-green-50 border-green-500 border-l-4' : 'bg-white border-l-4 border-blue-200';
+                const icon = item.done ? '✅' : '⭕️';
+                const painBadge = item.pain ? `<span class="ml-2 text-xs px-2 py-0.5 rounded ${item.pain > 2 ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}">Pain:${item.pain}</span>` : '';
+                
+                const actionDone = item.actions.filter(a => a.done).length;
+                const actionTotal = item.actions.length;
+                const actionBadge = actionTotal > 0 ? `<span class="text-xs text-blue-600 bg-blue-50 px-1 rounded ml-1">Actions:${actionDone}/${actionTotal}</span>` : '';
+
+                const html = `
+                    <div onclick="openModal(${realIndex})" class="card cursor-pointer rounded-xl p-4 shadow-sm flex justify-between items-start mb-3 ${statusClass}">
+                        <div class="flex-1">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-bold text-gray-800 text-sm">${item.date}</span>
+                                ${painBadge}
+                            </div>
+                            <div class="font-bold text-gray-900 mb-1">${item.task}</div>
+                            <p class="text-xs text-gray-500 mb-2">💡 ${item.focus} ${actionBadge}</p>
+                            ${item.done ? `<div class="text-xs text-gray-700 mt-2 border-t border-gray-200 pt-2 bg-opacity-50">📝 ${item.result} <br>❤️ ${item.feeling}</div>` : ''}
+                        </div>
+                        <div class="ml-3 text-xl mt-1">${icon}</div>
+                    </div>
+                `;
+                list.innerHTML += html;
+            });
+        }
+
+        function openModal(index) {
+            currentIndex = index;
+            const item = userPlan[index];
+            document.getElementById('modal-title').innerText = item.task;
+            document.getElementById('input-result').value = item.result;
+            document.getElementById('input-feeling').value = item.feeling;
+            selectPain(item.pain || 0);
+            
+            const actionList = document.getElementById('action-list');
+            actionList.innerHTML = '';
+            if (item.actions && item.actions.length > 0) {
+                document.getElementById('action-section').classList.remove('hidden');
+                item.actions.forEach((action, i) => {
+                    const checkedClass = action.done ? 'checked' : 'bg-white border-gray-200';
+                    const checkIcon = action.done ? '✓' : '';
+                    const checkBg = action.done ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 bg-white';
+                    
+                    actionList.innerHTML += `
+                        <div onclick="toggleAction(${i})" class="action-item ${checkedClass} cursor-pointer border rounded-lg p-3 flex items-start transition-colors duration-200 select-none">
+                            <div class="check-box w-6 h-6 border rounded flex-shrink-0 flex items-center justify-center mr-3 mt-0.5 ${checkBg}">
+                                ${checkIcon}
+                            </div>
+                            <div>
+                                <div class="text-sm font-bold action-name">${action.name}</div>
+                                <div class="text-xs text-gray-500 mt-1 leading-tight">${action.desc}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                document.getElementById('action-section').classList.add('hidden');
+            }
+
+            document.getElementById('modal').classList.remove('hidden');
+        }
+
+        function toggleAction(actionIndex) {
+            const currentState = userPlan[currentIndex].actions[actionIndex].done;
+            userPlan[currentIndex].actions[actionIndex].done = !currentState;
+            openModal(currentIndex);
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.add('hidden');
+        }
+
+        function selectPain(level) {
+            document.getElementById('input-pain').value = level;
+            document.querySelectorAll('.pain-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-600', 'text-white', 'ring-2', 'ring-blue-300');
+            });
+            if(level !== "") {
+                const btn = document.getElementById(`pain-btn-${level}`);
+                if(btn) btn.classList.add('bg-blue-600', 'text-white', 'ring-2', 'ring-blue-300');
+            }
+        }
+
+        function saveData() {
+            const result = document.getElementById('input-result').value;
+            const feeling = document.getElementById('input-feeling').value;
+            const pain = document.getElementById('input-pain').value;
+            const actionDone = userPlan[currentIndex].actions.some(a => a.done);
+
+            if(!result && !feeling && !actionDone) { alert("Please check an action or enter result."); return; }
+
+            userPlan[currentIndex].result = result;
+            userPlan[currentIndex].feeling = feeling;
+            userPlan[currentIndex].pain = pain;
+            userPlan[currentIndex].done = true;
+
+            localStorage.setItem('marathonPlan_v3', JSON.stringify(userPlan));
+            render();
+            closeModal();
+        }
+
+       
+        function generateReport() {
+            let report = `🏃‍♂️ Training Report (Week ${currentWeek})\n\n`;
+            const weekTasks = userPlan.filter(item => item.week === currentWeek && item.done);
+            
+            if(weekTasks.length === 0) { alert("No logs available."); return; }
+
+            weekTasks.forEach(item => {
+                report += `📅 ${item.date}\n`;
+                if(item.actions) {
+                    const dones = item.actions.filter(a => a.done).map(a=>a.name);
+                    if(dones.length) report += `💪 Actions: ${dones.join(', ')}\n`;
+                }
+                report += `📝 ${item.result}\n❤️ ${item.feeling} (Pain:${item.pain})\n\n`;
+            });
+            
+            navigator.clipboard.writeText(report).then(() => {
+                alert("Report Copied!");
+            });
+        }
+
+        init();
+    </script>
+</body>
+</html>
